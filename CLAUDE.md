@@ -107,7 +107,7 @@ tests/ (unit/, data/ con generador de 500 pedidos)
 - Una etapa por sesión. Al terminar, commit y resumen de qué probar.
 - Editar solo los archivos necesarios.
 - Interfaz y mensajes en español.
-- Estado actual: etapa 1 terminada en código (pendiente la prueba en dispositivos reales y conectar Cloudflare Pages). Siguiente: etapa 2.
+- Estado actual: etapas 1 y 2 terminadas en código (pendiente la prueba en dispositivos reales). Siguiente: etapa 3.
 
 ## Notas de la etapa 1
 - Router por hash (`#/panel`), sin configuración de servidor.
@@ -116,3 +116,11 @@ tests/ (unit/, data/ con generador de 500 pedidos)
 - Service Worker con `registerType: 'prompt'`: las versiones nuevas se aplican al tocar «Actualizar».
 - Fuentes empaquetadas (@fontsource, solo latin) para que funcionen sin internet.
 - Pruebas con `TZ=America/La_Paz` (vite.config.js).
+
+## Notas de la etapa 2
+- Licencia: `RVL1.<datos base64url>.<firma ECDSA P-256>`; formato en `core/licencia-formato.js`, clave pública en `core/licencia-clave-publica.js`. Emisor: `herramientas/emisor-licencias.html` (no se publica) y `scripts/emitir-licencia.mjs`. La clave privada NO está en el repositorio.
+- Ajustes nuevos: `licencia`, `marca` {nombre, whatsapp, logoId}, `seguridad.pin`, `seguridad.recuperacion` (solo hashes), `seguridad.intentosPin`, `seguridad.intentosRecuperacion`, `configuracion.completa`.
+- Logo en `archivos` (tipo `logo`); cambiarlo agrega uno nuevo y no borra el anterior.
+- Historial: `entidadId = 0` para entidades únicas (negocio, seguridad, licencia).
+- El asistente solo entra directo si terminó la configuración en ese momento; en cualquier otro caso se pide el PIN.
+- Sesión en memoria (`services/seguridad.js`); `services/sesion.js` → `bloquearAhora()`.

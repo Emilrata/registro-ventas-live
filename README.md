@@ -27,6 +27,27 @@ Los íconos de `public/icons` ya están generados. Para cambiarlos:
    Las demás ramas (por ejemplo `pruebas`) generan una dirección de vista previa propia para probar antes.
 4. `public/_headers` ya configura que `sw.js`, `index.html` y el manifiesto no queden en caché, para que las actualizaciones lleguen.
 
+## Licencias (códigos de activación)
+
+Cada negocio necesita un código de activación firmado. La app lo verifica sin internet con la clave **pública**
+(`src/core/licencia-clave-publica.js`). Los códigos se crean con la clave **privada** (`clave-privada-licencias.json`),
+que **nunca** se sube al repositorio. Guárdala en dos lugares seguros: si se pierde, no podrás emitir más códigos
+(habría que cambiar la clave y volver a activar todos los negocios).
+
+Dos formas de emitir un código:
+
+- **Sin instalar nada:** abre `herramientas/emisor-licencias.html` con doble clic, carga la clave privada,
+  escribe el nombre del negocio y copia el código.
+- **Con Node:** `node scripts/emitir-licencia.mjs --clave clave-privada-licencias.json --negocio "Boutique Ana" [--vence 2027-12-31]`
+
+## Acceso
+
+- Al abrir la app siempre se pide el PIN de 6 dígitos. 5 errores → espera de 30 s (se duplica en cada nueva serie).
+- «Olvidé mi PIN» usa el código de recuperación de 12 caracteres; el código usado deja de servir y se entrega uno nuevo.
+- Bloqueo automático tras inactividad (5 min por defecto, configurable en Más) y botón de candado arriba.
+- En iPhone/iPad la app exige instalarse en la pantalla de inicio antes de configurarse
+  (Safari guarda aparte los datos de la pestaña y los de la app instalada).
+
 ## Actualizaciones
 
 La app no se actualiza sola en medio del trabajo: cuando hay versión nueva aparece el aviso **«Hay una versión nueva de la app» → Actualizar**.

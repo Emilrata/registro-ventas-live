@@ -22,15 +22,19 @@
   <body>
     <div class="app">
       <header class="barra-superior">
-        <span class="marca">Ventas LIVE</span>
-        <span class="sin-conexion" id="sin-conexion" role="status" hidden></span>
+        <div class="marca" id="marca"><span class="marca__nombre">Ventas LIVE</span></div>
+        <div class="barra-superior__acciones">
+          <span class="sin-conexion" id="sin-conexion" role="status" hidden></span>
+          <button class="boton-icono" id="boton-bloquear" type="button" aria-label="Bloquear la app" hidden></button>
+        </div>
       </header>
       <main class="vista" id="vista" tabindex="-1">
         <noscript>Esta app necesita JavaScript activado.</noscript>
       </main>
       <nav class="nav" id="navegacion" aria-label="Navegación principal"></nav>
-      <div class="avisos" id="avisos" aria-live="polite"></div>
     </div>
+    <div class="acceso" id="acceso" hidden></div>
+    <div class="avisos" id="avisos" aria-live="polite"></div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

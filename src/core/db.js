@@ -164,6 +164,11 @@ export async function abrirBaseDeDatos() {
   return db;
 }
 
+/** Solo para pruebas: usar una base ya abierta como instancia de la app. */
+export function establecerBD(db) {
+  instancia = db;
+}
+
 /** Devuelve la base ya abierta (la usan los repositorios). */
 export function obtenerBD() {
   if (!instancia) throw new Error('La base de datos no está abierta.');
