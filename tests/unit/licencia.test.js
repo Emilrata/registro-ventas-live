@@ -96,7 +96,7 @@ describe('clave pública', () => {
   it('el emisor HTML usa la misma clave pública que la app', async () => {
     const { readFileSync } = await import('node:fs');
     const { CLAVE_PUBLICA_LICENCIAS } = await import('../../src/core/licencia-clave-publica.js');
-    const html = readFileSync(new URL('../../herramientas/emisor-licencias.html', import.meta.url), 'utf8');
+    const html = readFileSync(new URL('../../public/emisor/index.html', import.meta.url), 'utf8');
     expect(html).toContain(`x: '${CLAVE_PUBLICA_LICENCIAS.x}'`);
     expect(html).toContain(`y: '${CLAVE_PUBLICA_LICENCIAS.y}'`);
   });

@@ -3,11 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
 <title>Emisor de licencias</title>
 <!--
-  Herramienta PRIVADA para quien vende la app. NO se publica con la app.
-  Abre este archivo con doble clic (Chrome, Edge, Firefox o Safari). Funciona sin internet.
-  Necesita el archivo clave-privada-licencias.json. Nunca compartas ese archivo.
+  Herramienta para quien vende la app: se abre en /emisor/ desde el navegador del celular.
+  Es segura aunque esté publicada: sin el archivo clave-privada-licencias.json no puede crear códigos.
+  La clave se lee en el propio teléfono y nunca se envía por internet.
+  No forma parte de la app de los negocios (no se guarda en su caché).
   El formato del código es el mismo de src/core/licencia-formato.js.
 -->
 <style>
@@ -32,10 +35,10 @@
 <body>
 <main>
   <h1>Emisor de licencias</h1>
-  <p class="sec-t">Genera el código de activación de cada negocio. Funciona sin internet. Guarda tu clave privada en un lugar seguro y no la compartas.</p>
+  <p class="sec-t">Genera el código de activación de cada negocio. Tu clave privada se lee solo en este teléfono: no se envía a ningún lado. Guárdala en un lugar seguro y no la compartas.</p>
 
   <section class="tarjeta">
-    <label>1. Clave privada (clave-privada-licencias.json)
+    <label>1. Clave privada (elige el archivo clave-privada-licencias.json desde Descargas o Drive)
       <input type="file" id="archivo" accept=".json,application/json">
     </label>
     <p id="estado-clave" class="sec-t">Todavía no cargaste la clave.</p>
@@ -59,6 +62,7 @@
     <p class="ok" id="resumen"></p>
     <textarea id="codigo" rows="5" readonly></textarea>
     <button type="button" class="sec" id="copiar">Copiar código</button>
+    <button type="button" class="sec" id="compartir" hidden>Enviar por WhatsApp u otra app</button>
     <p class="sec-t">Envíalo al negocio. En la app: «Activa la app» → pegar el código.</p>
   </section>
 </main>
@@ -113,6 +117,11 @@ $('form').addEventListener('submit', async (e) => {
   $('resumen').textContent = `${negocio} · ${id} · ${vence ? 'vence ' + vence.split('-').reverse().join('/') : 'no vence'}`;
   $('resultado').hidden = false;
   $('copiar').textContent = 'Copiar código';
+});
+
+if (navigator.share) $('compartir').hidden = false;
+$('compartir').addEventListener('click', async () => {
+  try { await navigator.share({ text: $('codigo').value }); } catch { /* cancelado */ }
 });
 
 $('copiar').addEventListener('click', async () => {

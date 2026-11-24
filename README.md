@@ -36,8 +36,9 @@ que **nunca** se sube al repositorio. Guárdala en dos lugares seguros: si se pi
 
 Dos formas de emitir un código:
 
-- **Sin instalar nada:** abre `herramientas/emisor-licencias.html` con doble clic, carga la clave privada,
-  escribe el nombre del negocio y copia el código.
+- **Desde el celular:** abre `https://<tu-sitio>.pages.dev/emisor/` en el navegador, elige el archivo de la clave
+  privada (desde Descargas o Drive), escribe el nombre del negocio y copia o comparte el código.
+  La página está publicada pero es inútil sin la clave privada, que nunca sale del teléfono.
 - **Con Node:** `node scripts/emitir-licencia.mjs --clave clave-privada-licencias.json --negocio "Boutique Ana" [--vence 2027-12-31]`
 
 ## Acceso

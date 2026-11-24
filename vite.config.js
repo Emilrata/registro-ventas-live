@@ -21,7 +21,10 @@ export default defineConfig({
       manifest: false,
       workbox: {
         globPatterns: ['**/*.{html,js,css,woff2,png,svg,webmanifest}'],
+        // El emisor de licencias no es parte de la app de los negocios.
+        globIgnores: ['emisor/**'],
         navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/emisor/],
         cleanupOutdatedCaches: true,
         // Nunca guardar en caché datos de otros sitios.
         runtimeCaching: [],
