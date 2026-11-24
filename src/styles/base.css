@@ -1,0 +1,106 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: var(--fuente-texto);
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--texto);
+  outline-offset: 2px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.numero {
+  font-variant-numeric: tabular-nums;
+}
+
+.texto-secundario {
+  color: var(--secundario);
+  font-size: 0.9375rem;
+}
+
+.texto-alerta {
+  color: var(--alerta);
+}
+
+/* Estructura */
+.app {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.barra-superior {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: calc(env(safe-area-inset-top) + 10px) var(--espacio) 10px;
+  background: var(--fondo);
+  border-bottom: 1px solid var(--linea);
+}
+
+.marca {
+  font-family: var(--fuente-titulo);
+  font-size: 1.375rem;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+.vista {
+  flex: 1;
+  width: 100%;
+  max-width: var(--ancho-max);
+  margin: 0 auto;
+  padding: var(--espacio) var(--espacio)
+    calc(var(--alto-nav) + env(safe-area-inset-bottom) + var(--espacio));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vista:focus {
+  outline: none;
+}

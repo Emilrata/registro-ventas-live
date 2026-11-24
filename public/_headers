@@ -1,0 +1,24 @@
+# Cabeceras para Cloudflare Pages.
+# El Service Worker y el manifiesto nunca se guardan en caché HTTP:
+# así cada dispositivo detecta las versiones nuevas.
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+/registerSW.js
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: no-cache
+  Content-Type: application/manifest+json
+/index.html
+  Cache-Control: no-cache
+/
+  Cache-Control: no-cache
+
+# Archivos con huella en el nombre: pueden guardarse un año.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  X-Frame-Options: DENY
+  Permissions-Policy: geolocation=(), microphone=(), payment=(), usb=()

@@ -1,0 +1,51 @@
+/* Colores y medidas. Rojo solo para lo urgente. */
+:root {
+  color-scheme: light;
+  --fondo: #f7f7f5;
+  --tarjeta: #ffffff;
+  --texto: #111111;
+  --secundario: #666666;
+  --linea: #e7e7e4;
+  --alerta: #b42318;
+  --primario: #111111;
+  --sobre-primario: #ffffff;
+  --sombra: 0 1px 2px rgb(0 0 0 / 0.04);
+
+  --fuente-titulo: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --fuente-texto: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --radio: 12px;
+  --radio-chico: 8px;
+  --toque: 44px; /* tamaño mínimo de botones */
+  --espacio: 16px;
+  --alto-nav: 64px;
+  --ancho-max: 720px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --fondo: #0e0e0e;
+    --tarjeta: #181818;
+    --texto: #f2f2f2;
+    --secundario: #a3a3a3;
+    --linea: #2a2a2a;
+    --alerta: #f97066;
+    --primario: #f2f2f2;
+    --sobre-primario: #0e0e0e;
+    --sombra: none;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --fondo: #0e0e0e;
+  --tarjeta: #181818;
+  --texto: #f2f2f2;
+  --secundario: #a3a3a3;
+  --linea: #2a2a2a;
+  --alerta: #f97066;
+  --primario: #f2f2f2;
+  --sobre-primario: #0e0e0e;
+  --sombra: none;
+}
