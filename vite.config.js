@@ -24,7 +24,7 @@ export default defineConfig({
         // El emisor de licencias no es parte de la app de los negocios.
         globIgnores: ['emisor/**'],
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/emisor/],
+        navigateFallbackDenylist: [/^\/emisor/, /^\/legal/],
         cleanupOutdatedCaches: true,
         // Nunca guardar en caché datos de otros sitios.
         runtimeCaching: [],

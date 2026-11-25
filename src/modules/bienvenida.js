@@ -75,6 +75,9 @@ export async function mostrarAsistente(contenedor, { alTerminar }) {
         bloqueaIOS
           ? h('p', { class: 'aviso' }, 'Cuando abras la app desde el ícono de tu pantalla de inicio, podrás continuar.')
           : h('button', { class: 'boton boton--primario boton--ancho', type: 'button', onclick: () => pasoLicencia() }, 'Empezar'),
+        h('p', { class: 'campo__ayuda' }, 'Al continuar aceptas los ',
+          h('a', { href: '/legal/terminos/' }, 'Términos y condiciones'), ' y la ',
+          h('a', { href: '/legal/privacidad/' }, 'Política de privacidad'), '.'),
       );
     };
     dibujar();

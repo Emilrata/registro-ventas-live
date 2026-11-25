@@ -170,3 +170,9 @@ tests/ (unit/, data/ con generador de 500 pedidos)
 - `services/biometria.js`: WebAuthn de plataforma con `userVerification: 'required'`; se guarda la clave pública (SPKI) en `seguridad.biometria` y cada desbloqueo se verifica localmente (tipo, desafío, origen, rpIdHash, banderas UP+UV, firma ES256/RS256). Activar pide el PIN antes. Oculto si no hay soporte.
 - Prueba de la etapa: `tests/unit/respaldo-completo.test.js` (300 fotos, ~45 MB, con contraseña) y E2E de 200 pedidos con fotos JPEG restaurados en otro contexto de navegador.
 - Pendiente (desactivado por defecto en el documento): «archivo de fotos antiguas». No implementado para no arriesgar la regla de no borrar fotos.
+
+## Páginas legales
+- `public/legal/privacidad/` y `public/legal/terminos/` (+ `legal.css`): precacheadas (abren sin internet), enlazadas desde Más → Legal y la bienvenida. Incluyen la sección de Google Drive con la declaración de «Uso limitado» que exige Google.
+- Datos del proveedor pendientes: marcados con `<span class="pendiente" data-dato="proveedor|correo|ciudad">`. Reemplazar cuando la dueña los dé.
+- No son asesoría legal: recomendar revisión por abogado antes de vender.
+- Siguiente (pedido de la dueña): conexión opcional con Google Drive (OAuth con Google Identity Services, alcance `drive.file`, sin servidor). Requiere que la dueña cree un proyecto gratis en Google Cloud y entregue el ID de cliente.

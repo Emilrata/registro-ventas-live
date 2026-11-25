@@ -163,6 +163,10 @@ export async function render(contenedor) {
     tarjetaLicencia,
     tarjetaEstado,
     tarjetaDatos,
+    h('section', { class: 'tarjeta', 'aria-labelledby': 'legal-titulo' },
+      h('h2', { class: 'tarjeta__titulo', id: 'legal-titulo' }, 'Legal'),
+      h('a', { class: 'accion', href: '/legal/privacidad/' }, h('span', {}, 'Política de privacidad'), h('span', { class: 'accion__flecha', 'aria-hidden': 'true' }, '›')),
+      h('a', { class: 'accion', href: '/legal/terminos/' }, h('span', {}, 'Términos y condiciones'), h('span', { class: 'accion__flecha', 'aria-hidden': 'true' }, '›'))),
   );
   await Promise.all([dibujarEstado(), dibujarDatos()]);
 
