@@ -11,11 +11,11 @@ export const ACTOR_SISTEMA = 'sistema';
  * (incluir db.historial en la transacción).
  */
 export function registrarHistorial(
-  { entidad, entidadId = 0, tipo, antes = null, despues = null, actor = ACTOR_USUARIO },
+  { entidad, entidadId = 0, tipo, antes = null, despues = null, actor = ACTOR_USUARIO, fechaHora = ahoraISO() },
   db = obtenerBD(),
 ) {
   if (!entidad || !tipo) throw new TypeError('El historial necesita entidad y tipo');
-  return db.historial.add({ entidad, entidadId, tipo, antes, despues, fechaHora: ahoraISO(), actor });
+  return db.historial.add({ entidad, entidadId, tipo, antes, despues, fechaHora, actor });
 }
 
 export function historialDe(entidad, entidadId, db = obtenerBD()) {

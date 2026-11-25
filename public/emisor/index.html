@@ -26,6 +26,7 @@
   textarea { font-family: ui-monospace, Menlo, Consolas, monospace; font-size:.875rem; word-break:break-all; }
   button { font:inherit; font-weight:600; min-height:44px; padding:0 18px; border-radius:8px; border:1px solid var(--texto); background:var(--texto); color:var(--fondo); cursor:pointer; }
   button.sec { background:transparent; color:var(--texto); border-color:var(--linea); }
+  .plazos { display:flex; flex-wrap:wrap; gap:8px; }
   .sec-t { color:var(--sec); font-size:.875rem; margin:0; }
   .error { color:var(--alerta); margin:0; }
   .ok { margin:0; }
@@ -48,12 +49,20 @@
     <label>2. Nombre del negocio
       <input id="negocio" maxlength="80" required autocomplete="off">
     </label>
-    <label>Número de licencia (opcional)
+    <label>Número de licencia (opcional; para renovar, usa el mismo número de antes)
       <input id="id" placeholder="Se genera solo" autocomplete="off" style="text-transform:uppercase">
     </label>
     <label>Vence (opcional, vacío = no vence)
       <input id="vence" type="date">
     </label>
+    <div class="plazos" role="group" aria-label="Plazos rápidos">
+      <button type="button" class="sec" data-dias="7">Prueba 7 días</button>
+      <button type="button" class="sec" data-meses="1">1 mes</button>
+      <button type="button" class="sec" data-meses="3">3 meses</button>
+      <button type="button" class="sec" data-meses="12">1 año</button>
+      <button type="button" class="sec" data-sin="1">No vence</button>
+    </div>
+    <p class="sec-t">Consejo: se suman 3 días de margen para que no se bloquee si pagan con un día de retraso.</p>
     <p id="error" class="error" role="alert"></p>
     <button type="submit">Generar código</button>
   </form>
@@ -118,6 +127,17 @@ $('form').addEventListener('submit', async (e) => {
   $('resultado').hidden = false;
   $('copiar').textContent = 'Copiar código';
 });
+
+// Plazos rápidos: desde hoy + plazo + 3 días de margen.
+const MARGEN_DIAS = 3;
+document.querySelectorAll('.plazos button').forEach((b) => b.addEventListener('click', () => {
+  if (b.dataset.sin) { $('vence').value = ''; return; }
+  const d = new Date();
+  if (b.dataset.meses) d.setMonth(d.getMonth() + Number(b.dataset.meses));
+  if (b.dataset.dias) d.setDate(d.getDate() + Number(b.dataset.dias));
+  else d.setDate(d.getDate() + MARGEN_DIAS);
+  $('vence').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}));
 
 if (navigator.share) $('compartir').hidden = false;
 $('compartir').addEventListener('click', async () => {

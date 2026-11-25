@@ -22,7 +22,9 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{html,js,css,woff2,png,svg,webmanifest}'],
         // El emisor de licencias no es parte de la app de los negocios.
-        globIgnores: ['emisor/**'],
+        globIgnores: ['emisor/**', 'sw-avisos.js'],
+        // Avisos a clientas: clic en la notificación y revisión periódica (ver public/sw-avisos.js).
+        importScripts: ['sw-avisos.js'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/emisor/, /^\/legal/],
         cleanupOutdatedCaches: true,

@@ -29,6 +29,7 @@ const TEXTO_HISTORIAL = {
   'pedido-cancelado': 'Cancelado',
   'devolucion-registrada': 'Devolución registrada',
   'devolucion-anulada': 'Devolución anulada',
+  'aviso-clienta': 'Aviso a la clienta',
 };
 
 const recargar = () => window.dispatchEvent(new HashChangeEvent('hashchange'));
@@ -269,7 +270,7 @@ export async function render(contenedor, { params }) {
   if (pedido.estado === 'pendiente') tipos = ['listo', 'recordatorio'];
   else if (pedido.estado === 'entregado' && entrega?.modalidad === 'envio') tipos = ['enviado'];
   if (!cancelado && saldo > 0) tipos.push('saldo');
-  const mensajes = tipos.length ? await tarjetaMensajes({ cliente, pedidos: [pedido], entrega, tipos }, db) : null;
+  const mensajes = tipos.length ? await tarjetaMensajes({ cliente, pedidos: [pedido], entrega, tipos, registrar: pedido.estado === 'pendiente' }, db) : null;
 
   // Historial
   const historial = await historialDe('pedido', id, db);

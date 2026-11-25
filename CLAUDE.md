@@ -109,7 +109,7 @@ tests/ (unit/, data/ con generador de 500 pedidos)
 - Una etapa por sesión. Al terminar, commit y resumen de qué probar.
 - Editar solo los archivos necesarios.
 - Interfaz y mensajes en español.
-- Estado actual: etapas 1 a 8 terminadas (versión 1.0.0). App publicada en https://registro-ventas-live.pages.dev (Cloudflare Pages, rama `main`). Falta solo la prueba en dispositivos reales (sobre todo iPhone).
+- Estado actual: etapas 1 a 8 terminadas (versión 1.1.0: avisos a clientas, notificaciones locales y licencias por tiempo). App publicada en https://registro-ventas-live.pages.dev (Cloudflare Pages, rama `main`). Falta solo la prueba en dispositivos reales (sobre todo iPhone).
 
 ## Notas de la etapa 1
 - Router por hash (`#/panel`), sin configuración de servidor.
@@ -177,6 +177,14 @@ tests/ (unit/, data/ con generador de 500 pedidos)
 - Compatibilidad: `index.html` detecta navegadores antiguos (`window.__navegadorAntiguo`: indexedDB, crypto.subtle, `<dialog>`, `Array.prototype.at`) y muestra aviso; mínimo iOS 15.4 / Chrome 92. `services/imagenes.js` → `abrirImagen` con respaldo (createImageBitmap con opciones → sin opciones → `<img>`) para Safari.
 - Formulario de pedido: precio vacío cuenta 0 en pantalla y al guardar pide «Escribe el precio de la prenda N».
 - Solo hay Chromium en el entorno: la prueba en iPhone/Safari, Windows y tablet real la hace la dueña con la lista de comprobación.
+
+## Avisos a clientas y licencias por tiempo (v1.1.0)
+- `services/avisos.js`: pedidos pendientes de RECOJO agrupados por clienta. Sin aviso → «Avisar que está listo»; con aviso → «Recordar que recoja» cada `avisos.diasRecordatorio` días (7; opciones 3/5/7/10/15). Cada aviso = fila de historial `aviso-clienta` (entidad pedido; `despues.medio` whatsapp/manual). Los botones «listo»/«recordatorio» del detalle también registran aviso. Pantalla `#/avisos`; enlace en el Panel.
+- `services/notificaciones.js`: NO son push de servidor (regla 7). Notificación local (sin nombres ni montos) al entrar, al volver a la app y cada 30 min con la app abierta; máximo una por día salvo que aumente la cantidad; número en el ícono (Badging API). Permiso leído con la API de permisos (Chromium sin pantalla reporta `Notification.permission` = denied). Ajustes `notificaciones.*` son del dispositivo (no viajan en respaldos).
+- `public/sw-avisos.js` (importScripts de Workbox): clic en la notificación abre `#/avisos`; `periodicsync` (solo algunos Android instalados, no prometido) cuenta `notificaciones.agenda` (solo horas en ms) y notifica una vez al día. Solo lee ajustes y escribe `notificaciones.ultima`.
+- Licencias por tiempo: el Panel avisa desde 7 días antes de `vence`; Más → Licencia → «Escribir código nuevo (renovar)» (`#/mas/licencia`). Si vence, la bienvenida muestra «Renueva tu licencia» (los datos no se tocan) y luego pide el PIN. Emisor con botones rápidos (prueba 7 días, 1/3/12 meses + 3 días de margen). Atrasar el reloj del teléfono evita el vencimiento: límite aceptado del modo sin internet.
+- `registrarHistorial` acepta `fechaHora` opcional (para pruebas con fecha). Pruebas: `tests/unit/avisos.test.js`.
+- Términos v1.1 (planes, renovación, código gratis de pocos días para llevarse los datos) y privacidad (permiso de notificaciones).
 
 ## Páginas legales
 - `public/legal/privacidad/` y `public/legal/terminos/` (+ `legal.css`): precacheadas (abren sin internet), enlazadas desde Más → Legal y la bienvenida. Incluyen la sección de Google Drive con la declaración de «Uso limitado» que exige Google.

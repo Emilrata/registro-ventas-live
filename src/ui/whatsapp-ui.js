@@ -2,12 +2,14 @@
 import { h } from './dom.js';
 import { obtenerBD } from '../core/db.js';
 import { armarMensaje, enlaceWhatsApp, TIPOS_MENSAJE } from '../services/mensajes.js';
+import { registrarAviso } from '../services/avisos.js';
 
 /**
  * Crea una tarjeta con botones de mensajes para una clienta y sus pedidos.
  * tipos: lista de claves de TIPOS_MENSAJE a mostrar.
+ * registrar: si es true, abrir «listo» o «recordatorio» queda como aviso a la clienta (pantalla Avisos).
  */
-export async function tarjetaMensajes({ cliente, pedidos, entrega = null, tipos }, db = obtenerBD()) {
+export async function tarjetaMensajes({ cliente, pedidos, entrega = null, tipos, registrar = false }, db = obtenerBD()) {
   if (!cliente?.whatsapp || !pedidos.length) return null;
   const negocio = (await db.ajustes.get('marca'))?.valor?.nombre ?? '';
   const prendas = {};
@@ -16,7 +18,12 @@ export async function tarjetaMensajes({ cliente, pedidos, entrega = null, tipos 
     const texto = armarMensaje(tipo, { negocio, cliente, pedidos, prendas, entrega });
     return h(
       'a',
-      { class: 'boton boton--secundario boton--ancho', href: enlaceWhatsApp(cliente.whatsapp, texto), target: '_blank', rel: 'noopener' },
+      {
+        class: 'boton boton--secundario boton--ancho', href: enlaceWhatsApp(cliente.whatsapp, texto), target: '_blank', rel: 'noopener',
+        onclick: registrar && (tipo === 'listo' || tipo === 'recordatorio')
+          ? () => { registrarAviso({ pedidoIds: pedidos.map((p) => p.id), tipo, db }).catch((e) => console.error(e)); }
+          : undefined,
+      },
       TIPOS_MENSAJE[tipo],
     );
   });

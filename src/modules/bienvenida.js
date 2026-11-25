@@ -52,7 +52,7 @@ export async function mostrarAsistente(contenedor, { alTerminar }) {
   }
 
   function mostrarPaso(paso, estado) {
-    if (paso === 'licencia') return pasoLicencia();
+    if (paso === 'licencia') return pasoLicencia(estado);
     if (paso === 'marca') return pasoMarca(estado);
     if (paso === 'pin') return pasoPin();
     if (paso === 'recuperacion') return pasoRecuperacion();
@@ -86,7 +86,9 @@ export async function mostrarAsistente(contenedor, { alTerminar }) {
   }
 
   // --- Licencia ---------------------------------------------------------------
-  function pasoLicencia() {
+  function pasoLicencia(estado) {
+    // Licencia por tiempo que venció en un teléfono ya configurado: se renueva y todo sigue igual.
+    const renovar = estado?.completa === true;
     limpiar();
     const area = h('textarea', {
       class: 'entrada entrada--codigo', id: 'codigo-licencia', rows: '4', autocomplete: 'off',
@@ -132,9 +134,11 @@ export async function mostrarAsistente(contenedor, { alTerminar }) {
       }
     });
     pantalla(
-      progreso('licencia'),
-      h('h1', { class: 'titulo', tabindex: '-1' }, 'Activa la app'),
-      h('p', { class: 'texto-secundario' }, 'Cada negocio tiene su propio código de activación.'),
+      renovar ? null : progreso('licencia'),
+      h('h1', { class: 'titulo', tabindex: '-1' }, renovar ? 'Renueva tu licencia' : 'Activa la app'),
+      renovar
+        ? h('p', { class: 'aviso aviso--error' }, `${estado.licencia?.error ?? 'La licencia no es válida.'} Tus pedidos, fotos y pagos siguen guardados en este teléfono: pega el código nuevo para seguir usando la app.`)
+        : h('p', { class: 'texto-secundario' }, 'Cada negocio tiene su propio código de activación.'),
       form,
     );
   }

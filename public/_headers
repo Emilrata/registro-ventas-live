@@ -3,6 +3,8 @@
 # así cada dispositivo detecta las versiones nuevas.
 /sw.js
   Cache-Control: no-cache, no-store, must-revalidate
+/sw-avisos.js
+  Cache-Control: no-cache, no-store, must-revalidate
 /registerSW.js
   Cache-Control: no-cache
 /manifest.webmanifest

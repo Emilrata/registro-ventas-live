@@ -1,7 +1,7 @@
 // Pantalla: Panel (inicio).
 import { h, agregar, reemplazar } from '../ui/dom.js';
 import { encabezado, estadoVacio, tarjetaInstalacion } from '../ui/componentes.js';
-import { claveDia, formatearFecha } from '../core/dates.js';
+import { claveDia, diasEntre, formatearFecha } from '../core/dates.js';
 import { formatearMonto } from '../core/money.js';
 import { on } from '../core/events.js';
 import { obtenerBD } from '../core/db.js';
@@ -11,6 +11,8 @@ import { crearGaleria } from '../ui/fotos.js';
 import { pedidosPorVencer } from '../services/vencimientos.js';
 import { fotosSinRespaldar } from '../services/respaldo.js';
 import { estadoAlmacenamiento } from '../services/almacenamiento.js';
+import { clientasPorAvisar } from '../services/avisos.js';
+import { licenciaActual } from '../services/licencia.js';
 
 export async function render(contenedor) {
   const db = obtenerBD();
@@ -45,11 +47,19 @@ export async function render(contenedor) {
   // Espacio: aviso si se usa más del 80 % de lo que el navegador permite.
   const alm = await estadoAlmacenamiento();
   const espacioLleno = alm.usado !== null && alm.cuota ? alm.usado / alm.cuota > 0.8 : false;
+  const { grupos: porAvisar } = await clientasPorAvisar({ db });
+  // Licencia por tiempo: aviso desde 7 días antes de vencer.
+  const licencia = await licenciaActual({ db });
+  const venceEn = licencia.ok && licencia.datos.vence ? diasEntre(new Date(), `${licencia.datos.vence}T12:00:00`) : null;
   const recientes = await agregarFotoPrincipal(await listarPedidos({ limite: 5 }, db), db);
 
   agregar(contenedor, 
     encabezado('Panel', formatearFecha(new Date())),
     zonaInstalar,
+    venceEn !== null && venceEn <= 7
+      ? h('a', { class: 'aviso aviso--error aviso--enlace', href: '#/mas' },
+          `Tu licencia vence ${venceEn <= 0 ? 'hoy' : venceEn === 1 ? 'mañana' : `en ${venceEn} días`} (${formatearFecha(`${licencia.datos.vence}T12:00:00`)}). Pide tu código nuevo y escríbelo en Más → Licencia. Tus datos no se borran.`)
+      : null,
     totalPedidos > 0 && horasSinRespaldo > 24
       ? h('a', { class: 'aviso aviso--error aviso--enlace', href: '#/mas/respaldos' },
           ultimo ? 'Hace más de 24 h que no haces un respaldo. Toca para hacerlo.' : 'Todavía no hiciste ningún respaldo. Toca para hacerlo.')
@@ -72,6 +82,10 @@ export async function render(contenedor) {
       ? h('a', { class: `aviso aviso--enlace${vencidos.length ? ' aviso--error' : ''}`, href: '#/vencimientos' },
           [vencidos.length ? `${vencidos.length} ${vencidos.length === 1 ? 'pedido vencido' : 'pedidos vencidos'}` : null,
             porVencer.length ? `${porVencer.length} por vencer` : null].filter(Boolean).join(' · ') + '. Toca para ver.')
+      : null,
+    porAvisar.length
+      ? h('a', { class: 'aviso aviso--enlace', href: '#/avisos' },
+          `${porAvisar.length} ${porAvisar.length === 1 ? 'clienta por avisar' : 'clientas por avisar'} que recoja su pedido. Toca para ver.`)
       : null,
     h('a', { class: 'boton boton--primario boton--ancho', href: '#/pedidos/nuevo' }, '+ Nuevo pedido'),
     totalPedidos > 0 ? h('a', { class: 'boton boton--secundario boton--ancho', href: '#/informes' }, 'Ver informes y estadísticas') : null,

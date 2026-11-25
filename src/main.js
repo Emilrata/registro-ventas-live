@@ -25,6 +25,7 @@ import {
   sesionDesbloqueada,
 } from './services/seguridad.js';
 import { bloquearAhora } from './services/sesion.js';
+import { revisarAvisos } from './services/notificaciones.js';
 import { obtenerAjuste } from './repositories/ajustes.repo.js';
 import { obtenerArchivo } from './repositories/archivos.repo.js';
 
@@ -40,6 +41,7 @@ import * as pagoForm from './modules/pago-form.js';
 import * as entregaForm from './modules/entrega-form.js';
 import * as devolucionForm from './modules/devolucion-form.js';
 import * as vencimientos from './modules/vencimientos.js';
+import * as avisos from './modules/avisos.js';
 import { mostrarAsistente } from './modules/bienvenida.js';
 import { mostrarBloqueo } from './modules/bloqueo.js';
 
@@ -58,11 +60,13 @@ const RUTAS = {
   // Se carga aparte (incluye la librería de gráficos); igual queda guardado para usarse sin internet.
   '/informes': { titulo: 'Informes', render: async (c, ctx) => (await import('./modules/informes.js')).render(c, ctx) },
   '/vencimientos': { titulo: 'Vencimientos', render: vencimientos.render },
+  '/avisos': { titulo: 'Avisos a clientas', render: avisos.render },
   '/grupos/pagar': { titulo: 'Cobrar grupo', render: pagoForm.render },
   '/clientes/ver': { titulo: 'Clienta', render: clientes.renderDetalle },
   '/clientes/editar': { titulo: 'Editar clienta', render: clientes.renderEditar },
   '/mas/respaldos': { titulo: 'Respaldos', render: respaldos.render },
   '/mas/negocio': { titulo: 'Datos del negocio', render: mas.renderNegocio },
+  '/mas/licencia': { titulo: 'Renovar licencia', render: mas.renderLicencia },
   '/mas/pin': { titulo: 'Cambiar PIN', render: mas.renderCambiarPin },
   '/mas/biometria': { titulo: 'Huella / Face ID', render: mas.renderBiometria },
   '/mas/recuperacion': { titulo: 'Código de recuperación', render: mas.renderRecuperacion },
@@ -169,6 +173,13 @@ async function entrar() {
   } else {
     await router.refrescar();
   }
+  revisarAvisosLuego();
+}
+
+// Avisos a clientas: notificación del teléfono y número en el ícono (si están activados).
+// Se revisa al entrar, al volver a la app y cada 30 minutos mientras está abierta.
+function revisarAvisosLuego() {
+  revisarAvisos().catch((e) => console.error(e));
 }
 
 async function arrancar() {
@@ -200,9 +211,13 @@ async function vigilarInactividad() {
     if (debeBloquearsePorInactividad(minutos)) bloquearAhora();
   };
   setInterval(revisar, 15000);
+  setInterval(revisarAvisosLuego, 30 * 60 * 1000);
   // Al volver a la app (el temporizador se pausa en segundo plano).
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') revisar();
+    if (document.visibilityState === 'visible') {
+      revisar();
+      if (sesionDesbloqueada()) revisarAvisosLuego();
+    }
   });
 }
 

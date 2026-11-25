@@ -13,7 +13,15 @@ import {
   pedirPersistencia,
 } from '../services/almacenamiento.js';
 import { guardarMarca, obtenerMarca } from '../services/configuracion.js';
-import { licenciaActual } from '../services/licencia.js';
+import { activarLicencia, licenciaActual } from '../services/licencia.js';
+import { cambiarDiasRecordatorio, diasRecordatorio, OPCIONES_DIAS_RECORDATORIO } from '../services/avisos.js';
+import {
+  activarNotificaciones,
+  desactivarNotificaciones,
+  notificacionesActivas,
+  notificacionesSoportadas,
+  permisoNotificaciones,
+} from '../services/notificaciones.js';
 import { cambiarPin, renovarCodigoRecuperacion, verificarPin } from '../services/seguridad.js';
 import { bloquearAhora } from '../services/sesion.js';
 import { biometriaActiva, biometriaDisponible, activarBiometria, desactivarBiometria } from '../services/biometria.js';
@@ -92,7 +100,54 @@ export async function render(contenedor) {
           fila('Vence', licencia.datos.vence ? formatearFecha(`${licencia.datos.vence}T12:00:00`) : 'No vence'),
         ]
       : fila('Estado', licencia.error, { alerta: true }),
+    botonFila('Escribir código nuevo (renovar)', () => { window.location.hash = '/mas/licencia'; }),
   );
+
+  // Avisos a clientas y notificaciones del teléfono
+  const dias = await diasRecordatorio(db);
+  const selectorDias = h(
+    'select',
+    { class: 'entrada entrada--chica', id: 'dias-recordatorio' },
+    ...OPCIONES_DIAS_RECORDATORIO.map((d) => h('option', { value: String(d), selected: d === dias }, `${d} días`)),
+  );
+  selectorDias.addEventListener('change', async () => {
+    await cambiarDiasRecordatorio(Number(selectorDias.value), db);
+    mostrarAviso('Guardado.');
+  });
+  const tarjetaAvisos = h('section', { class: 'tarjeta', 'aria-labelledby': 'avisos-titulo' });
+  async function dibujarAvisos() {
+    const activas = await notificacionesActivas(db);
+    const permiso = await permisoNotificaciones();
+    reemplazar(tarjetaAvisos,
+      h('h2', { class: 'tarjeta__titulo', id: 'avisos-titulo' }, 'Avisos a clientas'),
+      botonFila('Ver a quién avisar', () => { window.location.hash = '/avisos'; }),
+      h('div', { class: 'fila' },
+        h('label', { class: 'fila__etiqueta', for: 'dias-recordatorio' }, 'Volver a recordar cada'),
+        selectorDias),
+      notificacionesSoportadas()
+        ? [
+            fila('Notificaciones', activas ? 'Activadas' : permiso === 'denied' ? 'Bloqueadas en el teléfono' : 'Desactivadas', { alerta: permiso === 'denied' }),
+            h('p', { class: 'texto-secundario' },
+              'Te avisa en el teléfono cuando hay clientas por avisar. Se revisa al abrir la app y mientras está abierta; en algunos Android también con la app cerrada, pero no siempre. Revisa la pantalla de avisos todos los días.'),
+            h('button', {
+              class: `boton ${activas ? 'boton--secundario' : 'boton--primario'}`,
+              type: 'button',
+              onclick: async () => {
+                if (activas) {
+                  await desactivarNotificaciones(db);
+                  mostrarAviso('Notificaciones desactivadas.');
+                } else {
+                  const r = await activarNotificaciones(db);
+                  mostrarAviso(r.ok ? 'Notificaciones activadas.' : r.error);
+                }
+                await dibujarAvisos();
+              },
+            }, activas ? 'Desactivar notificaciones' : 'Activar notificaciones'),
+          ]
+        : h('p', { class: 'texto-secundario' }, 'Para recibir notificaciones, instala la app en la pantalla de inicio (en iPhone, desde Safari).'),
+    );
+  }
+  await dibujarAvisos();
 
   const tarjetaEstado = h('section', { class: 'tarjeta', 'aria-labelledby': 'estado-titulo' });
   const tarjetaDatos = h('section', { class: 'tarjeta', 'aria-labelledby': 'datos-titulo' });
@@ -157,6 +212,7 @@ export async function render(contenedor) {
       h('h2', { class: 'tarjeta__titulo' }, 'Informes'),
       botonFila('Estadísticas y Excel', () => { window.location.hash = '/informes'; }),
       botonFila('Vencimientos', () => { window.location.hash = '/vencimientos'; })),
+    tarjetaAvisos,
     tarjetaRespaldos,
     tarjetaNegocio,
     tarjetaSeguridad,
@@ -185,6 +241,41 @@ function volver() {
 
 function enlaceVolver() {
   return h('a', { class: 'boton boton--enlace volver', href: '#/mas' }, '‹ Más');
+}
+
+// --- #/mas/licencia -----------------------------------------------------------
+export async function renderLicencia(contenedor) {
+  const area = h('textarea', {
+    class: 'entrada entrada--codigo', id: 'codigo-nuevo', rows: '4', autocomplete: 'off',
+    autocapitalize: 'off', autocorrect: 'off', spellcheck: 'false', placeholder: 'RVL1.…',
+  });
+  const error = h('p', { class: 'error-campo', role: 'alert' });
+  const boton = h('button', { class: 'boton boton--primario boton--ancho', type: 'submit' }, 'Guardar código');
+  const form = h('form', { class: 'formulario', novalidate: true },
+    h('div', { class: 'campo' },
+      h('label', { class: 'campo__etiqueta', for: 'codigo-nuevo' }, 'Código de activación nuevo'),
+      area,
+      h('p', { class: 'campo__ayuda' }, 'Pega el código que te enviaron. Reemplaza al anterior; tus datos no cambian.'),
+      error),
+    boton);
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    error.textContent = '';
+    if (!area.value.trim()) { error.textContent = 'Pega el código.'; return; }
+    boton.disabled = true;
+    try {
+      const r = await activarLicencia(area.value);
+      if (!r.ok) { error.textContent = r.error; return; }
+      mostrarAviso(r.datos.vence ? `Licencia renovada hasta el ${formatearFecha(`${r.datos.vence}T12:00:00`)}.` : 'Licencia activada sin vencimiento.');
+      volver();
+    } catch (err) {
+      console.error(err);
+      error.textContent = 'No se pudo verificar el código. Vuelve a intentarlo.';
+    } finally {
+      if (boton.isConnected) boton.disabled = false;
+    }
+  });
+  agregar(contenedor, enlaceVolver(), encabezado('Renovar licencia'), form);
 }
 
 // --- #/mas/negocio ------------------------------------------------------------
