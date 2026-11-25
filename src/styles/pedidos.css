@@ -622,3 +622,16 @@ html {
   color: var(--secundario);
   font-weight: 500;
 }
+
+.pago-aviso {
+  font-weight: 600;
+}
+
+.prenda__foto--chica {
+  width: 72px;
+  height: 72px;
+}
+
+.entrada[readonly] {
+  background: var(--fondo);
+}

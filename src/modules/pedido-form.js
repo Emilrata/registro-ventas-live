@@ -9,6 +9,7 @@ import { buscarPorWhatsapp, codigoPaisPorDefecto, resumenCliente } from '../serv
 import { crearPedido, editarPedido, obtenerPedido, posiblesDuplicados } from '../services/pedidos.js';
 import { crearTransmision, listarTransmisiones, transmisionActiva, elegirTransmision } from '../services/transmisiones.js';
 import { procesarFoto } from '../services/imagenes.js';
+import { exigePagoCompleto } from '../services/politicas.js';
 import { crearGaleria } from '../ui/fotos.js';
 import { confirmar } from '../ui/dialogo.js';
 import { mostrarAviso } from '../ui/actualizacion.js';
@@ -36,6 +37,9 @@ export async function render(contenedor, { params }) {
   }
 
   const codigoPais = await codigoPaisPorDefecto(db);
+  // Política del negocio: todo se paga al reservar (pago completo en el mismo formulario).
+  const exigir = await exigePagoCompleto(db);
+  const netoPagado = existente ? existente.pedido.pagado - existente.pedido.reembolsado : 0;
   let clienteEncontrado = existente?.cliente ?? null;
 
   // --- Transmisión --------------------------------------------------------------
@@ -134,6 +138,7 @@ export async function render(contenedor, { params }) {
       else total += e;
     }
     totalTexto.textContent = valido ? formatearMonto(total) : 'Revisa los precios';
+    if (typeof actualizarPago === 'function') actualizarPago(valido ? total : null);
     return valido ? total : null;
   }
 
@@ -252,9 +257,61 @@ export async function render(contenedor, { params }) {
   campoEnvio.hidden = modalidad !== 'envio';
   const observaciones = h('textarea', { class: 'entrada', id: 'pedido-obs', rows: '2', maxlength: '500' }, existente?.pedido.observaciones ?? '');
 
+  // --- Pago (al crear: el total; al editar: la diferencia si sube) -------------------
+  let pagoMetodo = null;
+  let pagoComprobante = null;
+  let pagoProcesando = false;
+  const pagoTexto = h('p', { class: 'pago-aviso numero' });
+  const opcionPago = (valor, texto) => {
+    const b = h('button', { class: 'segmento__opcion', type: 'button', 'aria-pressed': 'false' }, texto);
+    b.addEventListener('click', () => {
+      pagoMetodo = valor;
+      if (error.textContent.includes('efectivo o QR')) error.hidden = true;
+      for (const o of segmentoPago.children) o.setAttribute('aria-pressed', String(o === b));
+    });
+    return b;
+  };
+  const segmentoPago = h('div', { class: 'segmento', role: 'group', 'aria-label': 'Cómo pagó' }, opcionPago('efectivo', 'Efectivo'), opcionPago('qr', 'QR'));
+  const entradaComprobante = h('input', { class: 'solo-lectores', id: 'pedido-comprobante', type: 'file', accept: 'image/*' });
+  const vistaComprobante = h('span', { class: 'prenda__foto prenda__foto--chica' }, h('span', { class: 'prenda__foto-texto' }, '+ Foto'));
+  entradaComprobante.addEventListener('change', async () => {
+    const f = entradaComprobante.files?.[0];
+    if (!f) return;
+    pagoProcesando = true;
+    reemplazar(vistaComprobante, h('span', { class: 'texto-secundario' }, '…'));
+    try {
+      pagoComprobante = await procesarFoto(f);
+      reemplazar(vistaComprobante, h('img', { src: galeria.url(pagoComprobante.miniatura), alt: 'Comprobante' }));
+    } catch (err) {
+      pagoComprobante = null;
+      reemplazar(vistaComprobante, h('span', { class: 'prenda__foto-texto' }, '+ Foto'));
+      mostrarAviso(err.message || 'No se pudo usar esa imagen.');
+    }
+    pagoProcesando = false;
+  });
+  const seccionPago = h('section', { class: 'tarjeta tarjeta--destacada', hidden: true, 'aria-labelledby': 'pago-titulo' },
+    h('h2', { class: 'tarjeta__titulo', id: 'pago-titulo' }, editandoId ? 'Cobrar la diferencia' : 'Pago'),
+    pagoTexto,
+    h('div', { class: 'campo' }, h('span', { class: 'campo__etiqueta' }, 'Cómo pagó'), segmentoPago),
+    h('div', { class: 'campo' },
+      h('span', { class: 'campo__etiqueta' }, 'Comprobante (opcional)'),
+      h('div', { class: 'logo-campo' }, h('label', { class: 'prenda__foto-boton', for: 'pedido-comprobante', 'aria-label': 'Elegir comprobante' }, vistaComprobante),
+        h('p', { class: 'campo__ayuda' }, 'Captura del QR o foto del pago.')),
+      entradaComprobante));
+  let cobroNecesario = 0;
+  function actualizarPago(total) {
+    if (!exigir) return; // modo flexible: sin sección de pago
+    if (total === null) return; // precios inválidos: se mantiene lo último mostrado
+    cobroNecesario = Math.max(0, total - netoPagado);
+    seccionPago.hidden = cobroNecesario === 0;
+    pagoTexto.textContent = editandoId
+      ? `El total sube: se cobra la diferencia de ${formatearMonto(cobroNecesario)}.`
+      : `Se cobra el total: ${formatearMonto(cobroNecesario)}. El pedido se guarda pagado.`;
+  }
+
   // --- Guardar ----------------------------------------------------------------------
   const error = h('p', { class: 'aviso aviso--error', role: 'alert', hidden: true });
-  const guardar = h('button', { class: 'boton boton--primario', type: 'submit' }, editandoId ? 'Guardar cambios' : 'Guardar pedido');
+  const guardar = h('button', { class: 'boton boton--primario', type: 'submit' }, editandoId ? 'Guardar cambios' : exigir ? 'Cobrar y guardar' : 'Guardar pedido');
 
   const mostrarError = (texto) => {
     error.textContent = texto;
@@ -279,6 +336,17 @@ export async function render(contenedor, { params }) {
       observaciones: observaciones.value,
       prendas: datosPrendas,
     };
+    if (exigir && editandoId && total < netoPagado) {
+      return mostrarError(`El total no puede ser menor a lo que ya pagó la clienta (${formatearMonto(netoPagado)}).`);
+    }
+    if (exigir && cobroNecesario > 0) {
+      if (pagoProcesando) return mostrarError('Espera a que cargue el comprobante.');
+      if (!pagoMetodo) {
+        seccionPago.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return mostrarError('Elige cómo pagó la clienta: efectivo o QR.');
+      }
+      datos.pago = { metodo: pagoMetodo, comprobante: pagoComprobante };
+    }
 
     guardar.disabled = true;
     try {
@@ -349,6 +417,7 @@ export async function render(contenedor, { params }) {
     h('div', { class: 'campo' }, h('span', { class: 'campo__etiqueta' }, 'Entrega'), segmento),
     campoEnvio,
     h('div', { class: 'campo' }, h('label', { class: 'campo__etiqueta', for: 'pedido-obs' }, 'Observaciones'), observaciones),
+    seccionPago,
     error,
     h('div', { class: 'barra-guardar' }, h('span', { class: 'barra-guardar__etiqueta' }, 'Total', totalTexto), guardar),
   );

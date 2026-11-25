@@ -5,6 +5,7 @@
 //  - Las fotos nunca se borran (al quitar una prenda, su foto queda en `archivos`).
 //  - Todo cambio va al historial.
 import { obtenerBD } from '../core/db.js';
+import { formatearMonto } from '../core/money.js';
 import { ahoraISO, calcularFechaLimite } from '../core/dates.js';
 import { limpiarTexto, normalizarNombre, normalizarWhatsapp } from '../core/validation.js';
 import {
@@ -18,6 +19,8 @@ import {
 import { agregarArchivo } from '../repositories/archivos.repo.js';
 import { registrarHistorial } from '../repositories/historial.repo.js';
 import { codigoPaisPorDefecto, crearClienteEnTx } from './clientes.js';
+import { exigePagoCompleto } from './politicas.js';
+import { METODOS, registrarPago } from './pagos.js';
 
 const CLAVE_SEQ = 'codigos.ultimoSeq';
 
@@ -131,11 +134,16 @@ export async function crearPedido(datos, { ahora = new Date(), db = obtenerBD() 
   const { totalPrendas, total } = calcularTotales(vp.prendas, cab.envio);
   const plazo = (await db.ajustes.get('pedidos.plazoDias'))?.valor ?? 30;
   const creadoEn = ahora.toISOString();
+  // Política: el pedido se guarda con su pago completo, en la misma operación.
+  const cobrarAhora = total > 0 && (await exigePagoCompleto(db));
+  if (cobrarAhora && !METODOS.includes(datos.pago?.metodo)) {
+    return { ok: false, campo: 'pago', error: 'Elige cómo pagó la clienta (efectivo o QR). El pedido se guarda pagado completo.' };
+  }
 
   try {
     return await db.transaction(
       'rw',
-      [db.pedidos, db.prendas, db.archivos, db.clientes, db.ajustes, db.historial, db.transmisiones],
+      [db.pedidos, db.prendas, db.archivos, db.clientes, db.ajustes, db.historial, db.transmisiones, db.pagos, db.grupos],
       async () => {
         let cliente = await db.clientes.where('whatsapp').equals(w.valor).first();
         const clienteId = cliente
@@ -193,6 +201,12 @@ export async function crearPedido(datos, { ahora = new Date(), db = obtenerBD() 
           { entidad: 'pedido', entidadId: id, tipo: 'pedido-creado', despues: { ...pedido, id, prendas: guardadas } },
           db,
         );
+        if (cobrarAhora) {
+          const p = datos.pago;
+          const rp = await registrarPago({ pedidoId: id, monto: total, metodo: p.metodo, nota: p.nota, comprobante: p.comprobante }, { ahora, db });
+          // Si el pago falla, se deshace TODO (no queda un pedido sin pagar).
+          if (!rp.ok) throw Object.assign(new Error(rp.error), { campo: 'pago' });
+        }
         return { ok: true, id, codigo, clienteId };
       },
     );
@@ -217,11 +231,18 @@ export async function editarPedido(id, datos, { db = obtenerBD() } = {}) {
   if (!vp.ok) return { ...vp, campo: 'prendas' };
   const { totalPrendas, total } = calcularTotales(vp.prendas, cab.envio);
 
-  return db.transaction('rw', [db.pedidos, db.prendas, db.archivos, db.historial, db.transmisiones], async () => {
+  const exigir = await exigePagoCompleto(db);
+  if (datos.pago && !METODOS.includes(datos.pago.metodo)) return { ok: false, campo: 'pago', error: 'Elige efectivo o QR.' };
+  try {
+    return await db.transaction('rw', [db.pedidos, db.prendas, db.archivos, db.historial, db.transmisiones, db.pagos, db.grupos, db.ajustes], async () => {
     const antes = await db.pedidos.get(id);
     if (!antes) return { ok: false, error: 'El pedido no existe.' };
     if (antes.estado !== 'pendiente') return { ok: false, error: 'Solo se pueden editar pedidos pendientes.' };
     const netoPagado = antes.pagado - antes.reembolsado;
+    const diferencia = total - netoPagado;
+    if (exigir && diferencia > 0 && !datos.pago) {
+      return { ok: false, campo: 'pago', diferencia, error: `El nuevo total sube ${formatearMonto(diferencia)}: hay que cobrar la diferencia.` };
+    }
     if (total < netoPagado) {
       return { ok: false, error: 'El nuevo total sería menor a lo ya pagado. Primero corrige los pagos.' };
     }
@@ -262,6 +283,11 @@ export async function editarPedido(id, datos, { db = obtenerBD() } = {}) {
       actualizadoEn: ahoraISO(),
     };
     await db.pedidos.update(id, cambios);
+    if (exigir && diferencia > 0) {
+      const p = datos.pago;
+      const rp = await registrarPago({ pedidoId: id, monto: diferencia, metodo: p.metodo, nota: p.nota || 'Diferencia por edición', comprobante: p.comprobante }, { db });
+      if (!rp.ok) throw Object.assign(new Error(rp.error), { campo: 'pago' });
+    }
     await registrarHistorial(
       {
         entidad: 'pedido',
@@ -274,6 +300,10 @@ export async function editarPedido(id, datos, { db = obtenerBD() } = {}) {
     );
     return { ok: true };
   });
+  } catch (err) {
+    if (err?.campo) return { ok: false, campo: err.campo, error: err.message };
+    throw err;
+  }
 }
 
 // ---------------------------------------------------------------------------

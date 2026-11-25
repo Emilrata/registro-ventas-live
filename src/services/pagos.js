@@ -12,11 +12,12 @@ import { formatearMonto } from '../core/money.js';
 import { calcularEstadoPago, saldoPendiente } from '../core/calculos.js';
 import { agregarArchivo } from '../repositories/archivos.repo.js';
 import { registrarHistorial } from '../repositories/historial.repo.js';
+import { exigePagoCompleto } from './politicas.js';
 
 export const METODOS = ['efectivo', 'qr'];
 export const TEXTO_METODO = { efectivo: 'Efectivo', qr: 'QR' };
 
-const TABLAS_PAGO = (db) => [db.pedidos, db.pagos, db.archivos, db.historial, db.grupos];
+const TABLAS_PAGO = (db) => [db.pedidos, db.pagos, db.archivos, db.historial, db.grupos, db.ajustes];
 
 /** Recalcula pagado y estadoPago del pedido a partir de sus pagos. Dentro de una transacción. */
 async function actualizarPedidoDesdePagos(db, pedidoId) {
@@ -72,6 +73,9 @@ export async function registrarPago(datos, { ahora = new Date(), db = obtenerBD(
     const saldo = saldoPendiente(pedido);
     if (saldo === 0) return { ok: false, error: 'Este pedido ya está pagado.' };
     if (datos.monto > saldo) return { ok: false, error: `El monto supera el saldo pendiente (${formatearMonto(saldo)}). No se puede pagar de más.` };
+    if (datos.monto !== saldo && (await exigePagoCompleto(db))) {
+      return { ok: false, error: `Se paga el total: ${formatearMonto(saldo)}. No se aceptan adelantos.` };
+    }
 
     const fila = {
       pedidoId: pedido.id,
@@ -165,6 +169,9 @@ export async function pagarGrupo(datos, { ahora = new Date(), db = obtenerBD() }
     const saldoTotal = pedidos.reduce((s, p) => s + saldoPendiente(p), 0);
     if (saldoTotal === 0) return { ok: false, error: 'El grupo ya está pagado.' };
     if (datos.monto > saldoTotal) return { ok: false, error: `El monto supera el saldo del grupo (${formatearMonto(saldoTotal)}). No se puede pagar de más.` };
+    if (datos.monto !== saldoTotal && (await exigePagoCompleto(db))) {
+      return { ok: false, error: `Se paga el total del grupo: ${formatearMonto(saldoTotal)}. No se aceptan adelantos.` };
+    }
 
     const comprobanteId = await guardarComprobante(db, datos.comprobante, 'grupo', grupo.id);
     let resto = datos.monto;

@@ -43,6 +43,7 @@ export function ajustesIniciales(fecha = ahoraISO()) {
     'pedidos.plazoDias': PLAZO_DIAS_POR_DEFECTO,
     'pedidos.diasAviso': [25, 28],
     'pedidos.minutosDuplicado': 10,
+    'pedidos.exigirPagoCompleto': true, // se paga todo al reservar; no se entrega con deuda
     'whatsapp.codigoPais': '591',
     'seguridad.minutosBloqueo': 5,
     'fotos.archivoAntiguasActivo': false,

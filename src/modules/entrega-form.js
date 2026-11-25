@@ -8,6 +8,7 @@ import { saldoPendiente } from '../core/calculos.js';
 import { registrarEntrega } from '../services/entregas.js';
 import { confirmar } from '../ui/dialogo.js';
 import { mostrarAviso } from '../ui/actualizacion.js';
+import { exigePagoCompleto } from '../services/politicas.js';
 
 let n = 0;
 function campo(etiqueta, atributos = {}, ayuda = '') {
@@ -39,6 +40,18 @@ export async function render(contenedor, { params }) {
   const cliente = await db.clientes.get(pedidos[0].clienteId);
   const saldo = pedidos.reduce((s, p) => s + saldoPendiente(p), 0);
   const vencidos = pedidos.filter((p) => diasEntre(new Date(), p.fechaLimite) < 0);
+  // Política: no se entrega nada con deuda.
+  if (saldo > 0 && (await exigePagoCompleto(db))) {
+    agregar(
+      contenedor,
+      volver,
+      encabezado(grupoId ? 'Entregar grupo' : `Entregar ${pedidos[0].codigo}`, cliente?.nombre ?? ''),
+      h('p', { class: 'aviso aviso--error' }, `No se puede entregar: falta pagar ${formatearMonto(saldo)}.`),
+      ...pedidos.filter((p) => saldoPendiente(p) > 0).map((p) =>
+        h('a', { class: 'boton boton--primario boton--ancho', href: `#/pedidos/pagar?id=${p.id}` }, `Registrar pago de ${p.codigo} (${formatearMonto(saldoPendiente(p))})`)),
+    );
+    return;
+  }
   let modalidad = pedidos.some((p) => p.modalidad === 'envio') ? 'envio' : 'recojo';
 
   const destinatario = campo('Quién recibe', { maxlength: '80', value: cliente?.nombre ?? '' }, 'Si recoge otra persona, escribe su nombre.');

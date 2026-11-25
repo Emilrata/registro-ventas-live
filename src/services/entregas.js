@@ -11,8 +11,10 @@ import { diasEntre } from '../core/dates.js';
 import { limpiarTexto, normalizarWhatsapp } from '../core/validation.js';
 import { saldoPendiente } from '../core/calculos.js';
 import { registrarHistorial } from '../repositories/historial.repo.js';
+import { formatearMonto } from '../core/money.js';
+import { exigePagoCompleto } from './politicas.js';
 
-const TABLAS = (db) => [db.pedidos, db.entregas, db.grupos, db.historial, db.clientes];
+const TABLAS = (db) => [db.pedidos, db.entregas, db.grupos, db.historial, db.clientes, db.ajustes];
 
 const texto = (v, max, nombre) => {
   const t = limpiarTexto(v ?? '');
@@ -87,6 +89,9 @@ export async function registrarEntrega(datos, { ahora = new Date(), db = obtener
     pedidos.sort((a, b) => a.creadoEn.localeCompare(b.creadoEn));
 
     const saldo = pedidos.reduce((s, p) => s + saldoPendiente(p), 0);
+    if (saldo > 0 && (await exigePagoCompleto(db))) {
+      return { ok: false, faltaPago: saldo, error: `Falta pagar ${formatearMonto(saldo)}. Registra el pago antes de entregar.` };
+    }
     if (saldo > 0 && !datos.aceptarSaldo) return { ok: false, requiereConfirmacion: 'saldo', saldo };
     // Vencido = ya pasó el día de la fecha límite (por día local, igual que en la pantalla).
     const vencidos = pedidos.filter((p) => diasEntre(ahora, p.fechaLimite) < 0).map((p) => p.codigo);

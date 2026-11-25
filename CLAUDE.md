@@ -59,6 +59,7 @@ clientes, pedidos, prendas, archivos, pagos, devoluciones, grupos, entregas, his
 - Vencido: calculado por fecha límite (30 días por defecto, avisos días 25 y 28). Recoger vencido permitido y registrado.
 - Cancelaciones: restan del día original en ventas activas y se muestran aparte como cancelaciones del período.
 - Pago de más: bloqueado.
+- Pago al reservar (pedido de la dueña, 25/11/2026): cada pedido se guarda con su pago COMPLETO en el mismo formulario; sin adelantos; no se entrega con deuda; al editar, si sube el total se cobra la diferencia y no se puede bajar de lo pagado. Ajuste `pedidos.exigirPagoCompleto` (true por defecto; `services/politicas.js`). El modo flexible (false) conserva pagos parciales y «entregar igual»; las pruebas antiguas lo usan (`bdDePrueba()` sin opciones).
 - Duplicados: aviso sin bloqueo si la misma clienta tiene un pedido con el mismo total en los últimos 10 minutos.
 - Código: LIVE-00001, continuo, sin reinicio, generado dentro de la transacción del pedido.
 - WhatsApp: Bolivia por defecto (+591, 8 dígitos que empiezan con 6 o 7), con opción de otro código de país.

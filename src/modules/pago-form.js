@@ -10,6 +10,7 @@ import { pagarGrupo, registrarPago } from '../services/pagos.js';
 import { procesarFoto } from '../services/imagenes.js';
 import { crearGaleria } from '../ui/fotos.js';
 import { mostrarAviso } from '../ui/actualizacion.js';
+import { exigePagoCompleto } from '../services/politicas.js';
 
 async function cargarDatos(params, db) {
   if (params.grupo) {
@@ -57,11 +58,13 @@ export async function render(contenedor, { params }) {
     return undefined;
   }
 
+  // Política: sin adelantos → el monto es siempre el saldo completo.
+  const soloTotal = await exigePagoCompleto(db);
   let metodo = 'efectivo';
   let comprobante = null;
   let procesando = false;
 
-  const monto = h('input', { class: 'entrada entrada--monto numero', id: 'pago-monto', type: 'text', inputmode: 'decimal', autocomplete: 'off', value: formatearMonto(datos.saldo, { simbolo: false }) });
+  const monto = h('input', { class: 'entrada entrada--monto numero', id: 'pago-monto', type: 'text', inputmode: 'decimal', autocomplete: 'off', value: formatearMonto(datos.saldo, { simbolo: false }), readonly: soloTotal });
   const todo = h('button', { class: 'boton boton--secundario', type: 'button', onclick: () => { monto.value = formatearMonto(datos.saldo, { simbolo: false }); } }, 'Todo el saldo');
   const opcion = (valor, texto) => {
     const b = h('button', { class: 'segmento__opcion', type: 'button', 'aria-pressed': String(metodo === valor) }, texto);
@@ -99,7 +102,8 @@ export async function render(contenedor, { params }) {
     { class: 'formulario', novalidate: true },
     h('div', { class: 'campo' },
       h('label', { class: 'campo__etiqueta', for: 'pago-monto' }, 'Monto recibido (Bs)'),
-      h('div', { class: 'fila-entradas' }, monto, todo)),
+      soloTotal ? monto : h('div', { class: 'fila-entradas' }, monto, todo),
+      soloTotal ? h('p', { class: 'campo__ayuda' }, 'Se paga el total. No se aceptan adelantos.') : null),
     h('div', { class: 'campo' }, h('span', { class: 'campo__etiqueta' }, 'Método'), segmento),
     h('div', { class: 'campo' },
       h('span', { class: 'campo__etiqueta' }, 'Comprobante (opcional)'),
