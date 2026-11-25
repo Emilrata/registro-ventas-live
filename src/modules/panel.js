@@ -57,6 +57,7 @@ export async function render(contenedor) {
             porVencer.length ? `${porVencer.length} por vencer` : null].filter(Boolean).join(' · ') + '. Toca para ver.')
       : null,
     h('a', { class: 'boton boton--primario boton--ancho', href: '#/pedidos/nuevo' }, '+ Nuevo pedido'),
+    totalPedidos > 0 ? h('a', { class: 'boton boton--secundario boton--ancho', href: '#/informes' }, 'Ver informes y estadísticas') : null,
     totalPedidos === 0
       ? estadoVacio('Todavía no hay pedidos', 'Aquí verás las ventas, los cobros y lo pendiente del día.')
       : h('div', { class: 'paso' }, h('h2', { class: 'subtitulo' }, 'Últimos pedidos'), h('div', { class: 'lista' }, ...recientes.map((p) => tarjetaPedido(p, galeria)))),

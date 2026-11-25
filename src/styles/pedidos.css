@@ -592,3 +592,33 @@ html {
   text-decoration: none;
   color: inherit;
 }
+
+/* Informes */
+.grafico {
+  position: relative;
+  height: 220px;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  font-size: 0.875rem;
+}
+
+.tabla th,
+.tabla td {
+  padding: 6px 4px;
+  border-top: 1px solid var(--linea);
+  text-align: right;
+}
+
+.tabla th:first-child,
+.tabla td:first-child {
+  text-align: left;
+}
+
+.tabla th {
+  color: var(--secundario);
+  font-weight: 500;
+}

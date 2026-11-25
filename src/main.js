@@ -55,6 +55,8 @@ const RUTAS = {
   '/pedidos/pagar': { titulo: 'Registrar pago', render: pagoForm.render },
   '/pedidos/entregar': { titulo: 'Entregar', render: entregaForm.render },
   '/pedidos/devolver': { titulo: 'Devolución', render: devolucionForm.render },
+  // Se carga aparte (incluye la librería de gráficos); igual queda guardado para usarse sin internet.
+  '/informes': { titulo: 'Informes', render: async (c, ctx) => (await import('./modules/informes.js')).render(c, ctx) },
   '/vencimientos': { titulo: 'Vencimientos', render: vencimientos.render },
   '/grupos/pagar': { titulo: 'Cobrar grupo', render: pagoForm.render },
   '/clientes/ver': { titulo: 'Clienta', render: clientes.renderDetalle },

@@ -21,7 +21,7 @@ Maquetas aprobadas: https://claude.ai/artifact/5RZLpBW5HWAiNjSGxpHmk6
 - Vite + vite-plugin-pwa (Workbox) para Service Worker y manifiesto.
 - IndexedDB con Dexie.js.
 - Fotos comprimidas con Canvas y guardadas como Blob.
-- ZIP: fflate o client-zip (generado por partes). Excel: SheetJS. Gráficos: Chart.js.
+- ZIP: fflate (generado por partes). Excel: generador propio `core/xlsx.js` sobre fflate (SheetJS de npm tiene vulnerabilidades y la versión actual no está en npm). Gráficos: Chart.js 4.5.1.
 - Pruebas: Vitest.
 - Hosting: Cloudflare Pages conectado a GitHub; rama de pruebas y rama de producción.
 
@@ -108,7 +108,7 @@ tests/ (unit/, data/ con generador de 500 pedidos)
 - Una etapa por sesión. Al terminar, commit y resumen de qué probar.
 - Editar solo los archivos necesarios.
 - Interfaz y mensajes en español.
-- Estado actual: etapas 1 a 5 terminadas en código. App publicada en https://registro-ventas-live.pages.dev (Cloudflare Pages, rama `main`). Siguiente: etapa 6 (estadísticas e informes).
+- Estado actual: etapas 1 a 6 terminadas en código. App publicada en https://registro-ventas-live.pages.dev (Cloudflare Pages, rama `main`). Siguiente: etapa 7 (seguridad y respaldos completos).
 
 ## Notas de la etapa 1
 - Router por hash (`#/panel`), sin configuración de servidor.
@@ -152,3 +152,10 @@ tests/ (unit/, data/ con generador de 500 pedidos)
 - `services/mensajes.js`: textos de WhatsApp (listo, recordatorio, saldo, enviado) y `enlaceWhatsApp` (wa.me). Solo abre WhatsApp; no envía nada solo.
 - Los cancelados no suman al total del grupo. Lista de pedidos filtra por estado (filtro antes de offset/limit).
 - Prueba «nada borra fotos ni pagos» en `tests/unit/entregas.test.js`.
+
+## Notas de la etapa 6
+- `services/estadisticas.js`: ventas = pedidos creados en el período sin cancelados; cancelaciones aparte por fecha de cancelación; cobros por fecha de pago (anulaciones restan ese día); devoluciones por fecha; deudas y pendientes = foto de hoy. Días locales.
+- `services/excel.js` + `core/xlsx.js`: 9 hojas (Resumen, Por día, Pedidos, Prendas, Pagos, Devoluciones, Entregas, Por cobrar, Clientas). Dinero como número en Bs con formato #,##0.00; fechas como serie de Excel en hora local. Verificado con openpyxl y LibreOffice.
+- `modules/informes.js` se carga aparte (import dinámico) por Chart.js; sigue en el precaché.
+- Gráfico: dos series en la misma escala (un eje), gris validado con el validador de dataviz (ΔE ≥ 39, contraste ≥ 3:1), leyenda y tabla alternativa.
+- Prueba de la etapa en `tests/unit/estadisticas.test.js`.
