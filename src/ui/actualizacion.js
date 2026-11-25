@@ -2,7 +2,7 @@
 // se pregunta antes, para no recargar en medio de un registro.
 
 import { registerSW } from 'virtual:pwa-register';
-import { h } from './dom.js';
+import { h, agregar } from './dom.js';
 
 export function registrarServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
@@ -31,7 +31,7 @@ function zonaAvisos() {
 
 export function mostrarAviso(texto, { duracion = 4000 } = {}) {
   const aviso = h('div', { class: 'toast', role: 'status' }, texto);
-  zonaAvisos().append(aviso);
+  agregar(zonaAvisos(), aviso);
   setTimeout(() => aviso.remove(), duracion);
 }
 
@@ -55,5 +55,5 @@ function mostrarAvisoActualizacion(alAceptar) {
       'Actualizar',
     ),
   );
-  zonaAvisos().append(aviso);
+  agregar(zonaAvisos(), aviso);
 }

@@ -1,0 +1,522 @@
+.subtitulo {
+  font-family: var(--fuente-titulo);
+  font-weight: 400;
+  font-size: 1.5rem;
+  margin-top: 8px;
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filtros {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fila-botones {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fila-botones .boton {
+  flex: 1;
+}
+
+.observaciones {
+  white-space: pre-wrap;
+  padding: 10px 12px;
+  border-radius: var(--radio-chico);
+  background: var(--fondo);
+  font-size: 0.9375rem;
+}
+
+.aviso--enlace {
+  display: block;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.boton--peligro {
+  background: var(--alerta);
+  color: #fff;
+}
+
+/* Chips de estado */
+.chips {
+  display: inline-flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--linea);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--secundario);
+}
+
+.chip--pago-pagado,
+.chip--entregado {
+  background: var(--texto);
+  border-color: var(--texto);
+  color: var(--fondo);
+}
+
+.chip--pago-parcial,
+.chip--pendiente {
+  color: var(--texto);
+  border-color: var(--texto);
+}
+
+.chip--cancelado {
+  text-decoration: line-through;
+}
+
+/* Tarjeta de pedido en listas */
+.tarjeta-pedido {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--tarjeta);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  text-decoration: none;
+  color: inherit;
+  min-height: 72px;
+}
+
+.tarjeta-pedido__cuerpo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tarjeta-pedido__fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.tarjeta-pedido__codigo {
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.tarjeta-pedido__total {
+  font-weight: 600;
+}
+
+.tarjeta-pedido__cliente {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tarjeta-pedido__meta {
+  font-size: 0.8125rem;
+}
+
+/* Miniaturas */
+.mini-caja {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border-radius: var(--radio-chico);
+  overflow: hidden;
+  background: var(--fondo);
+  border: 1px solid var(--linea);
+  display: inline-flex;
+  padding: 0;
+}
+
+.mini-caja--grande {
+  width: 64px;
+  height: 64px;
+  cursor: zoom-in;
+}
+
+.mini-caja.sin-foto {
+  cursor: default;
+  background: repeating-linear-gradient(45deg, var(--fondo), var(--fondo) 6px, var(--linea) 6px, var(--linea) 7px);
+}
+
+.mini {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Visor de fotos */
+.visor {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgb(0 0 0 / 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+}
+
+.visor img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.visor__cerrar {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 8px);
+  right: 8px;
+  width: var(--toque);
+  height: var(--toque);
+  border: none;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.15);
+  color: #fff;
+  font-size: 1.25rem;
+}
+
+/* Diálogo */
+.dialogo {
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  background: var(--tarjeta);
+  color: var(--texto);
+  padding: 20px var(--espacio);
+  width: min(420px, calc(100vw - 32px));
+}
+
+.dialogo::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+.dialogo__titulo {
+  font-family: var(--fuente-titulo);
+  font-weight: 400;
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.dialogo__acciones {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+/* Formulario de pedido */
+.cliente-info {
+  font-size: 0.9375rem;
+  min-height: 1.4em;
+}
+
+.prendas {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.prenda__cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.prenda__cabecera .boton--enlace {
+  min-height: 36px;
+  padding: 0 4px;
+  color: var(--secundario);
+}
+
+.prenda__principal {
+  display: flex;
+  gap: 12px;
+}
+
+.prenda__foto-boton {
+  flex: none;
+  cursor: pointer;
+}
+
+.prenda__foto {
+  width: 96px;
+  height: 120px;
+  border-radius: var(--radio-chico);
+  border: 1px dashed var(--secundario);
+  background: var(--fondo);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.prenda__foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.prenda__foto-texto {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.prenda__datos {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.campo__etiqueta--chica {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--secundario);
+}
+
+.fila-campos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.fila-campos--3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.fila-campos .campo {
+  min-width: 0;
+  gap: 4px;
+}
+
+.cantidad {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-chico);
+  background: var(--tarjeta);
+  min-height: var(--toque);
+}
+
+.cantidad__boton {
+  width: 40px;
+  min-height: var(--toque);
+  border: none;
+  background: transparent;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.cantidad__valor {
+  font-weight: 600;
+}
+
+.segmento {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-chico);
+  overflow: hidden;
+}
+
+.segmento__opcion {
+  min-height: var(--toque);
+  border: none;
+  background: var(--tarjeta);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.segmento__opcion[aria-pressed='true'] {
+  background: var(--primario);
+  color: var(--sobre-primario);
+  font-weight: 600;
+}
+
+/* Barra fija para guardar (sobre la navegación) */
+.barra-guardar {
+  position: sticky;
+  bottom: calc(var(--alto-nav) + env(safe-area-inset-bottom) + 8px);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--tarjeta);
+  border: 1px solid var(--texto);
+  border-radius: var(--radio);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.12);
+}
+
+.barra-guardar__etiqueta {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.75rem;
+  color: var(--secundario);
+}
+
+.barra-guardar__total {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+/* Detalle */
+.lista-prendas {
+  display: flex;
+  flex-direction: column;
+}
+
+.prenda-fila {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid var(--linea);
+}
+
+.tarjeta__titulo + .lista-prendas .prenda-fila:first-child {
+  border-top: none;
+}
+
+.prenda-fila__texto {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9375rem;
+}
+
+.prenda-fila__texto .texto-secundario {
+  font-size: 0.8125rem;
+}
+
+.prenda-fila__subtotal {
+  font-weight: 600;
+}
+
+details.tarjeta summary {
+  cursor: pointer;
+  min-height: 28px;
+}
+
+/* Clientes */
+.tarjeta-cliente {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 14px;
+  background: var(--tarjeta);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  text-decoration: none;
+  color: inherit;
+}
+
+.tarjeta-cliente__nombre {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pedido-elegible {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pedido-elegible .tarjeta-pedido {
+  flex: 1;
+  min-width: 0;
+}
+
+.pedido-elegible__casilla {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--toque);
+  height: var(--toque);
+  flex: none;
+}
+
+.pedido-elegible__casilla input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--primario);
+}
+
+.barra-seleccion {
+  position: sticky;
+  bottom: calc(var(--alto-nav) + env(safe-area-inset-bottom) + 8px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--primario);
+  color: var(--sobre-primario);
+  border-radius: var(--radio);
+}
+
+.barra-seleccion span {
+  flex: 1;
+  font-weight: 600;
+}
+
+.barra-seleccion .boton--primario {
+  background: var(--sobre-primario);
+  color: var(--primario);
+}
+
+.barra-seleccion .boton--secundario {
+  color: var(--sobre-primario);
+  border-color: var(--sobre-primario);
+}
+
+/* Panel */
+.indicadores {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.indicador {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px;
+  background: var(--tarjeta);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+}
+
+.indicador__valor {
+  font-size: 1.375rem;
+  font-weight: 600;
+}
+
+.indicador__etiqueta {
+  font-size: 0.8125rem;
+  color: var(--secundario);
+}

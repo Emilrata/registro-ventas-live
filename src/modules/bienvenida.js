@@ -1,5 +1,5 @@
 // Asistente de primera configuración: bienvenida → licencia → marca → PIN → código de recuperación.
-import { h } from '../ui/dom.js';
+import { h, reemplazar } from '../ui/dom.js';
 import { tarjetaInstalacion } from '../ui/componentes.js';
 import { flujoPinNuevo, formularioMarca, vistaCodigoRecuperacion } from '../ui/flujos-acceso.js';
 import { esIOS, estaInstalada } from '../services/almacenamiento.js';
@@ -33,7 +33,7 @@ export async function mostrarAsistente(contenedor, { alTerminar }) {
   };
 
   const pantalla = (...hijos) => {
-    contenedor.replaceChildren(h('div', { class: 'paso' }, ...hijos));
+    reemplazar(contenedor, h('div', { class: 'paso' }, ...hijos));
     contenedor.querySelector('h1')?.focus({ preventScroll: true });
     window.scrollTo(0, 0);
   };
@@ -177,7 +177,7 @@ export async function mostrarAsistente(contenedor, { alTerminar }) {
         await siguiente();
       },
     });
-    contenedor.replaceChildren(h('div', { class: 'paso' }, progreso('recuperacion'), ...vista.childNodes));
+    reemplazar(contenedor, h('div', { class: 'paso' }, progreso('recuperacion'), ...vista.childNodes));
     contenedor.querySelector('h1')?.focus({ preventScroll: true });
   }
 

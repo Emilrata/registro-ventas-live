@@ -1,3 +1,5 @@
+import { sha256Hex } from '../core/crypto.js';
+
 // Procesamiento de imágenes en el navegador (Canvas).
 
 /**
@@ -40,4 +42,14 @@ export async function redimensionarImagen(archivo, { ladoMayor = 1280, tipo = 'i
 /** Logo del negocio: PNG de hasta 512 px (conserva transparencia). */
 export function procesarLogo(archivo) {
   return redimensionarImagen(archivo, { ladoMayor: 512, tipo: 'image/png' });
+}
+
+/**
+ * Foto de una prenda: 1280 px, JPEG 75 %, miniatura ~240 px y huella SHA-256.
+ * Devuelve { blob, ancho, alto, miniatura, sha256 }.
+ */
+export async function procesarFoto(archivo) {
+  const grande = await redimensionarImagen(archivo, { ladoMayor: 1280, tipo: 'image/jpeg', calidad: 0.75 });
+  const mini = await redimensionarImagen(grande.blob, { ladoMayor: 240, tipo: 'image/jpeg', calidad: 0.7 });
+  return { ...grande, miniatura: mini.blob, sha256: await sha256Hex(grande.blob) };
 }

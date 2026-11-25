@@ -7,11 +7,12 @@ import './styles/tokens.css';
 import './styles/base.css';
 import './styles/componentes.css';
 import './styles/acceso.css';
+import './styles/pedidos.css';
 
 import { abrirBaseDeDatos } from './core/db.js';
 import { on } from './core/events.js';
 import { crearRouter } from './ui/router.js';
-import { h, icono } from './ui/dom.js';
+import { h, icono, reemplazar } from './ui/dom.js';
 import { ICONOS } from './ui/iconos.js';
 import { escucharInstalacion } from './ui/instalacion.js';
 import { registrarServiceWorker } from './ui/actualizacion.js';
@@ -32,6 +33,9 @@ import * as pedidos from './modules/pedidos.js';
 import * as clientes from './modules/clientes.js';
 import * as pagos from './modules/pagos.js';
 import * as mas from './modules/mas.js';
+import * as pedidoForm from './modules/pedido-form.js';
+import * as pedidoDetalle from './modules/pedido-detalle.js';
+import * as respaldos from './modules/respaldos.js';
 import { mostrarAsistente } from './modules/bienvenida.js';
 import { mostrarBloqueo } from './modules/bloqueo.js';
 
@@ -41,6 +45,12 @@ const RUTAS = {
   '/clientes': { titulo: 'Clientes', icono: ICONOS.clientes, render: clientes.render },
   '/cobros': { titulo: 'Cobros', icono: ICONOS.cobros, render: pagos.render },
   '/mas': { titulo: 'Más', icono: ICONOS.mas, render: mas.render },
+  '/pedidos/nuevo': { titulo: 'Nuevo pedido', render: pedidoForm.render },
+  '/pedidos/editar': { titulo: 'Editar pedido', render: pedidoForm.render },
+  '/pedidos/ver': { titulo: 'Pedido', render: pedidoDetalle.render },
+  '/clientes/ver': { titulo: 'Clienta', render: clientes.renderDetalle },
+  '/clientes/editar': { titulo: 'Editar clienta', render: clientes.renderEditar },
+  '/mas/respaldos': { titulo: 'Respaldos', render: respaldos.render },
   '/mas/negocio': { titulo: 'Datos del negocio', render: mas.renderNegocio },
   '/mas/pin': { titulo: 'Cambiar PIN', render: mas.renderCambiarPin },
   '/mas/recuperacion': { titulo: 'Código de recuperación', render: mas.renderRecuperacion },
@@ -57,7 +67,7 @@ function construirNavegacion() {
     .map(([ruta, def]) =>
       h('a', { class: 'nav__item', href: `#${ruta}`, dataset: { ruta } }, icono(def.icono), h('span', { class: 'nav__texto' }, def.titulo)),
     );
-  $('navegacion').replaceChildren(...enlaces);
+  reemplazar($('navegacion'), ...enlaces);
   return (rutaActiva) => {
     for (const a of enlaces) {
       const activa = rutaActiva === a.dataset.ruta || rutaActiva.startsWith(`${a.dataset.ruta}/`);
@@ -69,7 +79,7 @@ function construirNavegacion() {
 
 function indicadorConexion() {
   const el = $('sin-conexion');
-  el.replaceChildren(icono(ICONOS.sinConexion), h('span', {}, 'Sin conexión'));
+  reemplazar(el, icono(ICONOS.sinConexion), h('span', {}, 'Sin conexión'));
   const actualizar = () => {
     el.hidden = navigator.onLine;
   };
@@ -93,7 +103,7 @@ async function cargarMarca() {
 
 async function dibujarMarca() {
   const m = await cargarMarca();
-  $('marca').replaceChildren(
+  reemplazar($('marca'), 
     m.logoUrl ? h('img', { class: 'marca__logo', src: m.logoUrl, alt: '' }) : null,
     h('span', { class: 'marca__nombre' }, m.nombre),
   );
@@ -118,7 +128,7 @@ async function mostrarAcceso(dibujar) {
   limpiezaAcceso = null;
   ocultarApp(true);
   const acceso = $('acceso');
-  acceso.replaceChildren();
+  reemplazar(acceso);
   window.scrollTo(0, 0);
   limpiezaAcceso = await dibujar(acceso);
 }
@@ -132,7 +142,7 @@ async function entrar() {
   limpiezaAcceso?.();
   limpiezaAcceso = null;
   desbloquearSesion();
-  $('acceso').replaceChildren();
+  reemplazar($('acceso'));
   ocultarApp(false);
   await dibujarMarca();
   if (!router) {
@@ -191,7 +201,7 @@ function pantallaDeError(titulo, texto) {
   limpiezaAcceso?.();
   limpiezaAcceso = null;
   ocultarApp(true);
-  $('acceso').replaceChildren(
+  reemplazar($('acceso'), 
     h(
       'div',
       { class: 'vacio', role: 'alert' },
@@ -250,7 +260,7 @@ async function iniciar() {
   pedirPersistencia(); // sin esperar: el navegador decide
 
   const botonBloquear = $('boton-bloquear');
-  botonBloquear.replaceChildren(icono(ICONOS.candado));
+  reemplazar(botonBloquear, icono(ICONOS.candado));
   botonBloquear.hidden = false;
   botonBloquear.addEventListener('click', () => bloquearAhora());
   on('sesion:bloqueada', () => pedirPin());

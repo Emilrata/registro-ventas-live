@@ -37,6 +37,19 @@ export function icono(svg) {
   return span;
 }
 
+/** Como el.append(), pero ignora null/undefined/false (append los convertiría en el texto «null»). */
+export function agregar(el, ...hijos) {
+  agregarHijos(el, hijos);
+  return el;
+}
+
+/** Como el.replaceChildren(), pero ignora null/undefined/false. */
+export function reemplazar(el, ...hijos) {
+  el.replaceChildren();
+  agregarHijos(el, hijos);
+  return el;
+}
+
 export function vaciar(el) {
   el.replaceChildren();
 }

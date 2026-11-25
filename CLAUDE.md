@@ -108,7 +108,7 @@ tests/ (unit/, data/ con generador de 500 pedidos)
 - Una etapa por sesión. Al terminar, commit y resumen de qué probar.
 - Editar solo los archivos necesarios.
 - Interfaz y mensajes en español.
-- Estado actual: etapas 1 y 2 terminadas en código (pendiente la prueba en dispositivos reales). Siguiente: etapa 3.
+- Estado actual: etapas 1, 2 y 3 terminadas en código. App publicada en https://registro-ventas-live.pages.dev (Cloudflare Pages, rama `main`). Siguiente: etapa 4 (pagos).
 
 ## Notas de la etapa 1
 - Router por hash (`#/panel`), sin configuración de servidor.
@@ -125,3 +125,14 @@ tests/ (unit/, data/ con generador de 500 pedidos)
 - Historial: `entidadId = 0` para entidades únicas (negocio, seguridad, licencia).
 - El asistente solo entra directo si terminó la configuración en ese momento; en cualquier otro caso se pide el PIN.
 - Sesión en memoria (`services/seguridad.js`); `services/sesion.js` → `bloquearAhora()`.
+
+## Notas de la etapa 3
+- Servicios: `clientes.js`, `transmisiones.js`, `pedidos.js` (crear/editar/buscar), `grupos.js`, `respaldo.js`; cálculos puros en `core/calculos.js`.
+- Pedido: `estado` = pendiente | entregado | cancelado; `estadoPago` = sin-pago | parcial | pagado (calculado con pagado − reembolsado); `modalidad` = recojo | envio.
+- Código: siguiente = max(`codigos.ultimoSeq`, mayor `seq`) + 1, dentro de la transacción del pedido.
+- Al restaurar, el contador queda en el mayor entre este teléfono, el respaldo y el último pedido: un código ya usado nunca se repite.
+- Editar pedido: lista completa de prendas; las quitadas se borran de `prendas` (quedan en el historial) y su foto se conserva en `archivos`. Bloquea total < pagado neto.
+- Grupos: nunca se borran; con menos de 2 pedidos pasan a `deshecho`.
+- Respaldo: ZIP sin compresión (fflate), `manifiesto.json` con SHA-256 de cada archivo; restaurar verifica todo antes, hace copia interna (`copiaInterna`) y reemplaza todo en una transacción, conservando `seguridad.*`, `licencia` y `configuracion.completa` del teléfono.
+- UI: usar `agregar()`/`reemplazar()` de `ui/dom.js` en vez de `append`/`replaceChildren` (estos escriben «null»).
+- Pruebas de volumen: `tests/data/generador.js` y `tests/unit/volumen.test.js`.

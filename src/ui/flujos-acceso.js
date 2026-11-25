@@ -1,6 +1,6 @@
 // Flujos reutilizables de acceso: crear PIN (con confirmación), mostrar código de
 // recuperación y formulario de la marca del negocio.
-import { h } from './dom.js';
+import { h, reemplazar } from './dom.js';
 import { crearTecladoPin } from './teclado-pin.js';
 import { formatearCodigoRecuperacion, validarPinNuevo } from '../services/seguridad.js';
 import { validarMarca } from '../services/configuracion.js';
@@ -15,7 +15,7 @@ export function flujoPinNuevo(contenedor, { titulo = 'Crea tu PIN', subtitulo, a
   const cambiar = (nuevo) => {
     teclado?.destruir();
     teclado = nuevo;
-    contenedor.replaceChildren(...[encabezado?.()].filter(Boolean), teclado.elemento);
+    reemplazar(contenedor, ...[encabezado?.()].filter(Boolean), teclado.elemento);
     teclado.elemento.querySelector('h1')?.focus({ preventScroll: true });
   };
 
@@ -142,7 +142,7 @@ export function formularioMarca({ inicial = {}, textoBoton = 'Continuar', alGuar
   const boton = h('button', { class: 'boton boton--primario boton--ancho', type: 'submit' }, textoBoton);
 
   const mostrarLogo = (url) => {
-    vista.replaceChildren(url ? h('img', { src: url, alt: 'Logo del negocio' }) : h('span', { class: 'texto-secundario' }, 'Sin logo'));
+    reemplazar(vista, url ? h('img', { src: url, alt: 'Logo del negocio' }) : h('span', { class: 'texto-secundario' }, 'Sin logo'));
   };
   mostrarLogo(inicial.logoUrl);
 

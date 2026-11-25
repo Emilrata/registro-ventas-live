@@ -229,6 +229,7 @@
 
 .volver {
   align-self: flex-start;
+  text-decoration: none;
   padding-left: 0;
   text-decoration: none;
   color: var(--secundario);

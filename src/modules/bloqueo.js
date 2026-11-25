@@ -1,5 +1,5 @@
 // Pantalla de bloqueo: pide el PIN. Incluye «Olvidé mi PIN» con el código de recuperación.
-import { h } from '../ui/dom.js';
+import { h, reemplazar } from '../ui/dom.js';
 import { crearTecladoPin, formatearEspera } from '../ui/teclado-pin.js';
 import { flujoPinNuevo, vistaCodigoRecuperacion } from '../ui/flujos-acceso.js';
 import { estadoIntentos, recuperarConCodigo, validarPinNuevo, verificarPin } from '../services/seguridad.js';
@@ -39,7 +39,7 @@ export async function mostrarBloqueo(contenedor, { marca, alDesbloquear }) {
       },
     });
     limpieza = () => teclado.destruir();
-    contenedor.replaceChildren(
+    reemplazar(contenedor, 
       h(
         'div',
         { class: 'paso paso--centrado' },
@@ -83,7 +83,7 @@ export async function mostrarBloqueo(contenedor, { marca, alDesbloquear }) {
       pedirPinNuevo(codigo);
     });
 
-    contenedor.replaceChildren(
+    reemplazar(contenedor, 
       h(
         'div',
         { class: 'paso' },
@@ -105,7 +105,7 @@ export async function mostrarBloqueo(contenedor, { marca, alDesbloquear }) {
   function pedirPinNuevo(codigo) {
     limpiar();
     const zona = h('div', { class: 'paso' });
-    contenedor.replaceChildren(zona);
+    reemplazar(contenedor, zona);
     limpieza = flujoPinNuevo(zona, {
       titulo: 'Crea un PIN nuevo',
       alConfirmar: async (pin) => {
@@ -130,7 +130,7 @@ export async function mostrarBloqueo(contenedor, { marca, alDesbloquear }) {
   // Paso 3: el código usado ya no sirve; mostrar el nuevo.
   function mostrarCodigoNuevo(codigo) {
     limpiar();
-    contenedor.replaceChildren(
+    reemplazar(contenedor, 
       vistaCodigoRecuperacion({
         codigo,
         titulo: 'Tu nuevo código',

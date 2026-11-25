@@ -1,7 +1,7 @@
 // Router por hash (#/panel). Funciona sin servidor y sin internet.
 // Cada ruta: { titulo, render(contenedor, { params }) → función de limpieza opcional }.
 
-import { vaciar } from './dom.js';
+import { vaciar, agregar } from './dom.js';
 
 export function crearRouter({ contenedor, rutas, rutaInicial, alCambiar }) {
   let limpiezaActual = null;
@@ -44,7 +44,7 @@ export function crearRouter({ contenedor, rutas, rutaInicial, alCambiar }) {
         const aviso = document.createElement('p');
         aviso.className = 'aviso aviso--error';
         aviso.textContent = 'No se pudo abrir esta pantalla. Vuelve a intentarlo.';
-        contenedor.append(aviso);
+        agregar(contenedor, aviso);
       }
     }
     if (turno === renderEnCurso) {

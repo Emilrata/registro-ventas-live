@@ -1,8 +1,8 @@
 // Pantalla: Más — negocio, seguridad, licencia, estado de la app.
-import { h } from '../ui/dom.js';
+import { h, agregar, reemplazar } from '../ui/dom.js';
 import { encabezado, fila, tarjetaInstalacion } from '../ui/componentes.js';
 import { obtenerBD, VERSION_ESQUEMA } from '../core/db.js';
-import { formatearFecha } from '../core/dates.js';
+import { formatearFecha, formatearFechaHora } from '../core/dates.js';
 import { emit } from '../core/events.js';
 import { contarRegistros, guardarAjuste, obtenerAjuste } from '../repositories/ajustes.repo.js';
 import { obtenerArchivo } from '../repositories/archivos.repo.js';
@@ -87,7 +87,7 @@ export async function render(contenedor) {
   async function dibujarEstado() {
     const alm = await estadoAlmacenamiento();
     const conexion = navigator.onLine ? 'En línea' : 'Sin conexión';
-    tarjetaEstado.replaceChildren(
+    reemplazar(tarjetaEstado, 
       h('h2', { class: 'tarjeta__titulo', id: 'estado-titulo' }, 'Estado de la app'),
       fila('Versión', __APP_VERSION__),
       fila('Modo', estaInstalada() ? 'Instalada' : 'En el navegador', { alerta: !estaInstalada() }),
@@ -120,7 +120,7 @@ export async function render(contenedor) {
   async function dibujarDatos() {
     const conteos = await contarRegistros(db);
     const total = Object.values(conteos).reduce((a, b) => a + b, 0);
-    tarjetaDatos.replaceChildren(
+    reemplazar(tarjetaDatos, 
       h('h2', { class: 'tarjeta__titulo', id: 'datos-titulo' }, 'Base de datos'),
       fila('Versión del esquema', String(VERSION_ESQUEMA)),
       fila('Tablas', String(Object.keys(conteos).length)),
@@ -128,9 +128,19 @@ export async function render(contenedor) {
     );
   }
 
-  contenedor.append(
+  const ultimoRespaldo = (await obtenerAjuste('respaldo.ultimo', null, db))?.fecha ?? null;
+  const tarjetaRespaldos = h(
+    'section',
+    { class: 'tarjeta', 'aria-labelledby': 'respaldos-titulo' },
+    h('h2', { class: 'tarjeta__titulo', id: 'respaldos-titulo' }, 'Respaldos'),
+    fila('Último respaldo', ultimoRespaldo ? formatearFechaHora(ultimoRespaldo) : 'Nunca', { alerta: !ultimoRespaldo }),
+    botonFila('Crear o restaurar respaldo', () => { window.location.hash = '/mas/respaldos'; }),
+  );
+
+  agregar(contenedor, 
     encabezado('Más'),
     tarjetaInstalacion(() => dibujarEstado()) ?? '',
+    tarjetaRespaldos,
     tarjetaNegocio,
     tarjetaSeguridad,
     tarjetaLicencia,
@@ -177,7 +187,7 @@ export async function renderNegocio(contenedor) {
       return r;
     },
   });
-  contenedor.append(enlaceVolver(), encabezado('Datos del negocio'), h('section', { class: 'tarjeta' }, f.elemento));
+  agregar(contenedor, enlaceVolver(), encabezado('Datos del negocio'), h('section', { class: 'tarjeta' }, f.elemento));
   return () => {
     f.destruir();
     if (logoUrl) URL.revokeObjectURL(logoUrl);
@@ -187,7 +197,7 @@ export async function renderNegocio(contenedor) {
 // --- #/mas/pin ----------------------------------------------------------------
 export async function renderCambiarPin(contenedor) {
   const zona = h('div', { class: 'paso' });
-  contenedor.append(enlaceVolver(), zona);
+  agregar(contenedor, enlaceVolver(), zona);
   let limpieza = null;
 
   const teclado = crearTecladoPin({
@@ -211,7 +221,7 @@ export async function renderCambiarPin(contenedor) {
       return { ok: true };
     },
   });
-  zona.append(teclado.elemento);
+  agregar(zona, teclado.elemento);
   return () => {
     teclado.destruir();
     limpieza?.();
@@ -221,7 +231,7 @@ export async function renderCambiarPin(contenedor) {
 // --- #/mas/recuperacion -------------------------------------------------------
 export async function renderRecuperacion(contenedor) {
   const zona = h('div', { class: 'paso' });
-  contenedor.append(enlaceVolver(), zona);
+  agregar(contenedor, enlaceVolver(), zona);
   const teclado = crearTecladoPin({
     titulo: 'Nuevo código de recuperación',
     subtitulo: 'Escribe tu PIN. El código anterior dejará de servir.',
@@ -229,7 +239,7 @@ export async function renderRecuperacion(contenedor) {
       const r = await renovarCodigoRecuperacion(pin);
       if (!r.ok) return r;
       teclado.destruir();
-      zona.replaceChildren(
+      reemplazar(zona, 
         vistaCodigoRecuperacion({
           codigo: r.codigo,
           titulo: 'Tu nuevo código',
@@ -240,6 +250,6 @@ export async function renderRecuperacion(contenedor) {
       return { ok: true };
     },
   });
-  zona.append(teclado.elemento);
+  agregar(zona, teclado.elemento);
   return () => teclado.destruir();
 }

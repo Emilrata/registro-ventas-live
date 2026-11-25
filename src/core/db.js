@@ -78,6 +78,45 @@ function crearBdMigraciones(opcionesDexie) {
 const TAMANO_LOTE = 200;
 
 /**
+ * Copia todas las tablas de `origen` (base abierta) a la base de copias internas.
+ * Devuelve el id de la copia.
+ */
+async function copiarTablas(origen, datos, opcionesDexie) {
+  const m = crearBdMigraciones(opcionesDexie);
+  await m.open();
+  try {
+    const copiaId = await m.copias.add({ fecha: ahoraISO(), ...datos, completa: 0, conteos: {} });
+    const conteos = {};
+    for (const tabla of origen.tables) {
+      const clave = tabla.schema.primKey.keyPath;
+      let ultimo;
+      let total = 0;
+      for (;;) {
+        const lote =
+          ultimo === undefined
+            ? await tabla.orderBy(':id').limit(TAMANO_LOTE).toArray()
+            : await tabla.where(':id').above(ultimo).limit(TAMANO_LOTE).toArray();
+        if (lote.length === 0) break;
+        await m.filas.bulkAdd(lote.map((fila) => ({ copiaId, tabla: tabla.name, fila })));
+        total += lote.length;
+        ultimo = lote[lote.length - 1][clave];
+        if (lote.length < TAMANO_LOTE) break;
+      }
+      conteos[tabla.name] = total;
+    }
+    await m.copias.update(copiaId, { completa: 1, conteos });
+    return copiaId;
+  } finally {
+    m.close();
+  }
+}
+
+/** Copia de seguridad interna de la base abierta (por ejemplo, antes de restaurar). */
+export function copiaInterna(db, motivo, opcionesDexie) {
+  return copiarTablas(db, { motivo, versionOrigen: db.verno, versionDestino: db.verno }, opcionesDexie);
+}
+
+/**
  * Si la base existente tiene una versión menor que `versionDestino`, copia todas
  * sus tablas (incluidas fotos en Blob) a una base aparte antes de migrar.
  * Devuelve el id de la copia, o null si no hacía falta.
@@ -103,39 +142,7 @@ export async function respaldarAntesDeMigrar({
     }
     if (versionOrigen === versionDestino) return null;
 
-    const m = crearBdMigraciones(opcionesDexie);
-    await m.open();
-    try {
-      const copiaId = await m.copias.add({
-        fecha: ahoraISO(),
-        versionOrigen,
-        versionDestino,
-        completa: 0,
-        conteos: {},
-      });
-      const conteos = {};
-      for (const tabla of previa.tables) {
-        const clave = tabla.schema.primKey.keyPath;
-        let ultimo;
-        let total = 0;
-        for (;;) {
-          const lote =
-            ultimo === undefined
-              ? await tabla.orderBy(':id').limit(TAMANO_LOTE).toArray()
-              : await tabla.where(':id').above(ultimo).limit(TAMANO_LOTE).toArray();
-          if (lote.length === 0) break;
-          await m.filas.bulkAdd(lote.map((fila) => ({ copiaId, tabla: tabla.name, fila })));
-          total += lote.length;
-          ultimo = lote[lote.length - 1][clave];
-          if (lote.length < TAMANO_LOTE) break;
-        }
-        conteos[tabla.name] = total;
-      }
-      await m.copias.update(copiaId, { completa: 1, conteos });
-      return copiaId;
-    } finally {
-      m.close();
-    }
+    return await copiarTablas(previa, { motivo: 'migracion', versionOrigen, versionDestino }, opcionesDexie);
   } finally {
     previa.close();
   }
