@@ -38,7 +38,7 @@ const TAMANO_TROZO = 8 * 1024 * 1024;
 
 /** Ajustes propios del dispositivo: nunca se reemplazan al restaurar. */
 export function esAjusteDelDispositivo(clave) {
-  return clave.startsWith('seguridad.') || clave === 'licencia' || clave === 'configuracion.completa';
+  return clave.startsWith('seguridad.') || clave.startsWith('drive.') || clave === 'licencia' || clave === 'configuracion.completa';
 }
 
 const EXTENSIONES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'application/pdf': 'pdf' };

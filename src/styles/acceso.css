@@ -386,3 +386,14 @@
   color: var(--secundario);
   font-size: 1.375rem;
 }
+
+.casilla--fila {
+  align-items: flex-start;
+  padding: 6px 0;
+  border-top: 1px solid var(--linea);
+  font-size: 0.9375rem;
+}
+
+.casilla--fila input {
+  margin-top: 2px;
+}

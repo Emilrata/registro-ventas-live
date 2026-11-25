@@ -6,6 +6,7 @@ import { formatearFechaHora } from '../core/dates.js';
 import { formatearBytes } from '../services/almacenamiento.js';
 import { crearRespaldo, fotosSinRespaldar, TIPOS_RESPALDO } from '../services/respaldo.js';
 import { panelRestaurar } from '../ui/restaurar-ui.js';
+import { botonSubirADrive, tarjetaDrive } from '../ui/drive-ui.js';
 import { mostrarAviso } from '../ui/actualizacion.js';
 
 function puedeCompartir(blob, nombre) {
@@ -75,16 +76,18 @@ export async function render(contenedor) {
     reemplazar(resultado);
     try {
       const r = await crearRespaldo({ tipo, contrasena, db });
+      const subir = await botonSubirADrive(r.blob, r.nombre, db);
       agregar(resultado,
         h('p', { class: 'aviso' },
           `Listo: respaldo ${TIPOS_RESPALDO[tipo].toLowerCase()}${r.conteos ? ` con ${r.conteos.pedidos} pedidos` : ''}${tipo !== 'datos' ? `, ${r.archivos} fotos y comprobantes` : ''} (${formatearBytes(r.bytes)})${contrasena ? ', con contraseña' : ''}. Guárdalo fuera del teléfono, por ejemplo en Google Drive.`),
+        subir,
         // El botón de compartir solo aparece si el navegador de verdad puede abrir el menú
         // de compartir del teléfono (Chrome sí; Brave, por ejemplo, no comparte archivos).
         puedeCompartir(r.blob, r.nombre)
           ? h('button', { class: 'boton boton--primario boton--ancho', type: 'button', onclick: () => guardarArchivo(r.blob, r.nombre) }, 'Compartir (elige Drive en el menú)')
           : null,
         h('button', { class: `boton ${puedeCompartir(r.blob, r.nombre) ? 'boton--secundario' : 'boton--primario'} boton--ancho`, type: 'button', onclick: () => descargar(r.blob, r.nombre) }, 'Descargar al teléfono'),
-        h('p', { class: 'campo__ayuda' },
+        subir ? null : h('p', { class: 'campo__ayuda' },
           'La app no entra a tu Drive. Para guardarlo ahí: abre la app Google Drive → botón + → Subir → carpeta Descargas → elige el archivo ',
           h('strong', {}, r.nombre), '.'));
       resultado.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -104,6 +107,13 @@ export async function render(contenedor) {
     return b;
   };
 
+  const panel = panelRestaurar({
+    db,
+    alRestaurar: () => {
+      mostrarAviso('Respaldo restaurado.');
+      setTimeout(() => window.location.reload(), 800);
+    },
+  });
   agregar(
     contenedor,
     h('a', { class: 'boton boton--enlace volver', href: '#/mas' }, '‹ Más'),
@@ -120,16 +130,11 @@ export async function render(contenedor) {
       h('label', { class: 'casilla', for: 'resp-usar-clave' }, usarClave, h('span', {}, 'Proteger con contraseña')),
       camposClave,
       resultado),
+    tarjetaDrive({ db, panelRestaurar: panel }),
     h('section', { class: 'tarjeta' },
       h('h2', { class: 'tarjeta__titulo' }, 'Restaurar'),
       h('p', { class: 'texto-secundario' }, 'Se revisa todo antes de cambiar nada.'),
-      panelRestaurar({
-        db,
-        alRestaurar: () => {
-          mostrarAviso('Respaldo restaurado.');
-          setTimeout(() => window.location.reload(), 800);
-        },
-      })),
+      panel),
     historial.length
       ? h('details', { class: 'tarjeta' },
           h('summary', { class: 'tarjeta__titulo' }, `Respaldos hechos (${historial.length})`),

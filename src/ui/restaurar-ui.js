@@ -82,9 +82,15 @@ export function panelRestaurar({ db, alRestaurar, textoConfirmacion }) {
     if (archivos.length) procesar();
   });
 
-  return h('div', { class: 'paso' },
+  const raiz = h('div', { class: 'paso' },
     h('label', { class: 'boton boton--secundario boton--ancho', for: id }, 'Elegir archivo(s) de respaldo'),
     entrada,
     h('p', { class: 'campo__ayuda' }, 'Puedes elegir varios a la vez: el último de datos o completo, y los de fotos.'),
     estado);
+  // Para restaurar archivos que vienen de otro lado (por ejemplo, Google Drive).
+  raiz.restaurarArchivos = (lista) => {
+    archivos = lista;
+    if (archivos.length) procesar();
+  };
+  return raiz;
 }

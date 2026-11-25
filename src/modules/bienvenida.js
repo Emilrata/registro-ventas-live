@@ -9,6 +9,7 @@ import { crearPinInicial, finalizarConfiguracion, generarCodigoRecuperacion } fr
 import { on } from '../core/events.js';
 import { obtenerBD } from '../core/db.js';
 import { panelRestaurar } from '../ui/restaurar-ui.js';
+import { tarjetaDrive } from '../ui/drive-ui.js';
 
 const PASOS = ['licencia', 'marca', 'pin', 'recuperacion'];
 
@@ -158,11 +159,14 @@ export async function mostrarAsistente(contenedor, { alTerminar }) {
       h('details', { class: 'tarjeta' },
         h('summary', { class: 'tarjeta__titulo' }, '¿Ya usabas la app en otro teléfono? Restaurar un respaldo'),
         h('p', { class: 'texto-secundario' }, 'Se cargan tus pedidos, clientas, fotos y los datos del negocio. Después crearás un PIN nuevo para este teléfono.'),
-        panelRestaurar({
-          db: obtenerBD(),
-          textoConfirmacion: 'Se cargarán en este teléfono todos los datos del respaldo.',
-          alRestaurar: () => siguiente(),
-        })),
+        ...(() => {
+          const panel = panelRestaurar({
+            db: obtenerBD(),
+            textoConfirmacion: 'Se cargarán en este teléfono todos los datos del respaldo.',
+            alRestaurar: () => siguiente(),
+          });
+          return [tarjetaDrive({ db: obtenerBD(), panelRestaurar: panel, modo: 'restaurar' }), h('p', { class: 'campo__etiqueta' }, 'O desde un archivo del teléfono:'), panel];
+        })()),
     );
   }
 
