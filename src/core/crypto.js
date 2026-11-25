@@ -78,3 +78,33 @@ export function igualesTiempoConstante(a, b) {
   for (let i = 0; i < a.length; i += 1) dif |= a[i] ^ b[i];
   return dif === 0;
 }
+
+// ---------------------------------------------------------------------------
+// Cifrado de respaldos con contraseña: AES-GCM 256 con clave derivada por PBKDF2-SHA256.
+// Cada archivo se guarda como: IV (12 bytes) + texto cifrado (incluye la etiqueta de 16 bytes).
+
+export async function claveDesdeContrasena(contrasena, sal, iteraciones = PBKDF2_ITERACIONES) {
+  const base = await subtle().importKey('raw', textoABytes(contrasena), 'PBKDF2', false, ['deriveKey']);
+  return subtle().deriveKey(
+    { name: 'PBKDF2', hash: 'SHA-256', salt: sal, iterations: iteraciones },
+    base,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt'],
+  );
+}
+
+export async function cifrarBytes(clave, bytes) {
+  const iv = bytesAleatorios(12);
+  const cifrado = new Uint8Array(await subtle().encrypt({ name: 'AES-GCM', iv }, clave, bytes));
+  const salida = new Uint8Array(12 + cifrado.length);
+  salida.set(iv, 0);
+  salida.set(cifrado, 12);
+  return salida;
+}
+
+/** Lanza un error si la clave es incorrecta o los datos fueron alterados (GCM lo detecta). */
+export async function descifrarBytes(clave, bytes) {
+  if (bytes.length < 28) throw new Error('Datos cifrados incompletos');
+  return new Uint8Array(await subtle().decrypt({ name: 'AES-GCM', iv: bytes.subarray(0, 12) }, clave, bytes.subarray(12)));
+}

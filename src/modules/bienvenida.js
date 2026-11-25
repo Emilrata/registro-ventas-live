@@ -7,6 +7,8 @@ import { activarLicencia } from '../services/licencia.js';
 import { estadoConfiguracion, guardarMarca } from '../services/configuracion.js';
 import { crearPinInicial, finalizarConfiguracion, generarCodigoRecuperacion } from '../services/seguridad.js';
 import { on } from '../core/events.js';
+import { obtenerBD } from '../core/db.js';
+import { panelRestaurar } from '../ui/restaurar-ui.js';
 
 const PASOS = ['licencia', 'marca', 'pin', 'recuperacion'];
 
@@ -149,6 +151,15 @@ export async function mostrarAsistente(contenedor, { alTerminar }) {
       h('h1', { class: 'titulo', tabindex: '-1' }, 'Tu negocio'),
       h('p', { class: 'texto-secundario' }, 'Aparecerá en la app y en los mensajes a tus clientas.'),
       f.elemento,
+      // Teléfono nuevo o reinstalación: traer todo desde un respaldo (luego se crea un PIN nuevo).
+      h('details', { class: 'tarjeta' },
+        h('summary', { class: 'tarjeta__titulo' }, '¿Ya usabas la app en otro teléfono? Restaurar un respaldo'),
+        h('p', { class: 'texto-secundario' }, 'Se cargan tus pedidos, clientas, fotos y los datos del negocio. Después crearás un PIN nuevo para este teléfono.'),
+        panelRestaurar({
+          db: obtenerBD(),
+          textoConfirmacion: 'Se cargarán en este teléfono todos los datos del respaldo.',
+          alRestaurar: () => siguiente(),
+        })),
     );
   }
 

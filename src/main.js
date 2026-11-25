@@ -64,6 +64,7 @@ const RUTAS = {
   '/mas/respaldos': { titulo: 'Respaldos', render: respaldos.render },
   '/mas/negocio': { titulo: 'Datos del negocio', render: mas.renderNegocio },
   '/mas/pin': { titulo: 'Cambiar PIN', render: mas.renderCambiarPin },
+  '/mas/biometria': { titulo: 'Huella / Face ID', render: mas.renderBiometria },
   '/mas/recuperacion': { titulo: 'Código de recuperación', render: mas.renderRecuperacion },
 };
 

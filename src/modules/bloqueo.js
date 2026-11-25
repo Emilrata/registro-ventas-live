@@ -2,6 +2,7 @@
 import { h, reemplazar } from '../ui/dom.js';
 import { crearTecladoPin, formatearEspera } from '../ui/teclado-pin.js';
 import { flujoPinNuevo, vistaCodigoRecuperacion } from '../ui/flujos-acceso.js';
+import { biometriaActiva, biometriaDisponible, desbloquearConBiometria } from '../services/biometria.js';
 import { estadoIntentos, recuperarConCodigo, validarPinNuevo, verificarPin } from '../services/seguridad.js';
 
 /**
@@ -39,11 +40,32 @@ export async function mostrarBloqueo(contenedor, { marca, alDesbloquear }) {
       },
     });
     limpieza = () => teclado.destruir();
+    // Huella / Face ID: solo si está activada y el teléfono lo permite.
+    const conBiometria = (await biometriaActiva()) && (await biometriaDisponible());
+    const mensajeBio = h('p', { class: 'error-campo', role: 'alert' });
+    const botonBio = conBiometria
+      ? h('button', {
+          class: 'boton boton--secundario', type: 'button',
+          onclick: async (e) => {
+            const b = e.currentTarget;
+            b.disabled = true;
+            mensajeBio.textContent = '';
+            const r = await desbloquearConBiometria();
+            b.disabled = false;
+            if (r.ok) {
+              limpiar();
+              alDesbloquear();
+            } else mensajeBio.textContent = r.error;
+          },
+        }, 'Usar huella / Face ID')
+      : null;
     reemplazar(contenedor, 
       h(
         'div',
         { class: 'paso paso--centrado' },
         cabecera(),
+        botonBio,
+        conBiometria ? mensajeBio : null,
         teclado.elemento,
         h('button', { class: 'boton boton--enlace', type: 'button', onclick: pedirCodigo }, 'Olvidé mi PIN'),
       ),

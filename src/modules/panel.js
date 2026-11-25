@@ -9,6 +9,8 @@ import { listarPedidos } from '../services/pedidos.js';
 import { agregarFotoPrincipal, tarjetaPedido } from '../ui/pedidos-ui.js';
 import { crearGaleria } from '../ui/fotos.js';
 import { pedidosPorVencer } from '../services/vencimientos.js';
+import { fotosSinRespaldar } from '../services/respaldo.js';
+import { estadoAlmacenamiento } from '../services/almacenamiento.js';
 
 export async function render(contenedor) {
   const db = obtenerBD();
@@ -35,6 +37,14 @@ export async function render(contenedor) {
   const ultimo = (await db.ajustes.get('respaldo.ultimo'))?.valor ?? null;
   const horasSinRespaldo = ultimo ? (Date.now() - new Date(ultimo.fecha).getTime()) / 3600000 : Infinity;
   const { vencidos, porVencer } = await pedidosPorVencer({ db });
+  // Fotos nuevas sin respaldar: aviso si el último respaldo de fotos tiene más de 7 días.
+  const ultimoFotos = (await db.ajustes.get('respaldo.ultimoFotos'))?.valor ?? null;
+  const sinRespaldar = await fotosSinRespaldar(db);
+  const diasSinFotos = ultimoFotos ? (Date.now() - new Date(ultimoFotos.fecha).getTime()) / 86400000 : Infinity;
+  const avisoFotos = sinRespaldar > 0 && diasSinFotos > 7;
+  // Espacio: aviso si se usa más del 80 % de lo que el navegador permite.
+  const alm = await estadoAlmacenamiento();
+  const espacioLleno = alm.usado !== null && alm.cuota ? alm.usado / alm.cuota > 0.8 : false;
   const recientes = await agregarFotoPrincipal(await listarPedidos({ limite: 5 }, db), db);
 
   agregar(contenedor, 
@@ -43,6 +53,13 @@ export async function render(contenedor) {
     totalPedidos > 0 && horasSinRespaldo > 24
       ? h('a', { class: 'aviso aviso--error aviso--enlace', href: '#/mas/respaldos' },
           ultimo ? 'Hace más de 24 h que no haces un respaldo. Toca para hacerlo.' : 'Todavía no hiciste ningún respaldo. Toca para hacerlo.')
+      : null,
+    avisoFotos
+      ? h('a', { class: 'aviso aviso--error aviso--enlace', href: '#/mas/respaldos' },
+          `${sinRespaldar} ${sinRespaldar === 1 ? 'foto' : 'fotos'} sin respaldar${ultimoFotos ? ' desde hace más de una semana' : ''}. Toca para hacer el respaldo de fotos.`)
+      : null,
+    espacioLleno
+      ? h('a', { class: 'aviso aviso--error aviso--enlace', href: '#/mas' }, 'El espacio para la app está casi lleno. Haz un respaldo completo y guárdalo fuera del teléfono.')
       : null,
     h(
       'div',

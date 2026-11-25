@@ -109,7 +109,7 @@ tests/ (unit/, data/ con generador de 500 pedidos)
 - Una etapa por sesión. Al terminar, commit y resumen de qué probar.
 - Editar solo los archivos necesarios.
 - Interfaz y mensajes en español.
-- Estado actual: etapas 1 a 6 terminadas en código. App publicada en https://registro-ventas-live.pages.dev (Cloudflare Pages, rama `main`). Siguiente: etapa 7 (seguridad y respaldos completos).
+- Estado actual: etapas 1 a 7 terminadas en código. App publicada en https://registro-ventas-live.pages.dev (Cloudflare Pages, rama `main`). Siguiente: etapa 8 (pruebas finales).
 
 ## Notas de la etapa 1
 - Router por hash (`#/panel`), sin configuración de servidor.
@@ -160,3 +160,13 @@ tests/ (unit/, data/ con generador de 500 pedidos)
 - `modules/informes.js` se carga aparte (import dinámico) por Chart.js; sigue en el precaché.
 - Gráfico: dos series en la misma escala (un eje), gris validado con el validador de dataviz (ΔE ≥ 39, contraste ≥ 3:1), leyenda y tabla alternativa.
 - Prueba de la etapa en `tests/unit/estadisticas.test.js`.
+
+## Notas de la etapa 7
+- `core/zip-lector.js`: lee el índice del ZIP y devuelve cada entrada como `Blob.slice` del archivo (no carga el ZIP en memoria). Sin ZIP64 (límite 4 GB).
+- `services/respaldo.js` (formato 2; lee también el formato 1): tipos `datos` (solo datos.json), `fotos` (archivos con id > `respaldo.fotosHastaId`; por id, no por hora) y `completo`. Escritura por partes (trozos de 8 MB, fotos de a una). Contraseña opcional: cada entrada AES-GCM-256 (IV+cifrado) con clave PBKDF2; `verificador` en el manifiesto. SHA-256 del contenido guardado en el manifiesto + SHA-256 de la foto descifrada contra `archivos.sha256`.
+- Restaurar acepta VARIOS archivos: datos del más reciente con datos; fotos de cualquiera. Si faltan fotos: `puedeContinuar` y, con confirmación, se restaura con `perdido: true` (blob null); los respaldos siguientes las ignoran.
+- Ajustes: `respaldo.ultimo` (datos/completo), `respaldo.ultimoFotos`, `respaldo.fotosHastaId`. Panel avisa: >24 h sin respaldo de datos, fotos sin respaldar >7 días, espacio >80 %.
+- Bienvenida: en el paso «Tu negocio» se puede restaurar un respaldo (teléfono nuevo); luego se crea un PIN nuevo.
+- `services/biometria.js`: WebAuthn de plataforma con `userVerification: 'required'`; se guarda la clave pública (SPKI) en `seguridad.biometria` y cada desbloqueo se verifica localmente (tipo, desafío, origen, rpIdHash, banderas UP+UV, firma ES256/RS256). Activar pide el PIN antes. Oculto si no hay soporte.
+- Prueba de la etapa: `tests/unit/respaldo-completo.test.js` (300 fotos, ~45 MB, con contraseña) y E2E de 200 pedidos con fotos JPEG restaurados en otro contexto de navegador.
+- Pendiente (desactivado por defecto en el documento): «archivo de fotos antiguas». No implementado para no arriesgar la regla de no borrar fotos.

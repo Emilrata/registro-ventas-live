@@ -16,6 +16,8 @@ import { guardarMarca, obtenerMarca } from '../services/configuracion.js';
 import { licenciaActual } from '../services/licencia.js';
 import { cambiarPin, renovarCodigoRecuperacion, verificarPin } from '../services/seguridad.js';
 import { bloquearAhora } from '../services/sesion.js';
+import { biometriaActiva, biometriaDisponible, activarBiometria, desactivarBiometria } from '../services/biometria.js';
+import { confirmar } from '../ui/dialogo.js';
 import { mostrarAviso } from '../ui/actualizacion.js';
 import { crearTecladoPin } from '../ui/teclado-pin.js';
 import { flujoPinNuevo, formularioMarca, vistaCodigoRecuperacion } from '../ui/flujos-acceso.js';
@@ -55,6 +57,7 @@ export async function render(contenedor) {
     botonFila('Editar datos del negocio', () => { window.location.hash = '/mas/negocio'; }),
   );
 
+  const [bioDisponible, bioActiva] = await Promise.all([biometriaDisponible(), biometriaActiva(db)]);
   const tarjetaSeguridad = h(
     'section',
     { class: 'tarjeta', 'aria-labelledby': 'seguridad-titulo' },
@@ -65,6 +68,16 @@ export async function render(contenedor) {
     botonFila('Bloquear ahora', () => bloquearAhora()),
     botonFila('Cambiar PIN', () => { window.location.hash = '/mas/pin'; }),
     botonFila('Nuevo código de recuperación', () => { window.location.hash = '/mas/recuperacion'; }),
+    bioDisponible
+      ? bioActiva
+        ? botonFila('Desactivar huella / Face ID', async () => {
+            if (!(await confirmar({ titulo: 'Desactivar huella / Face ID', texto: 'Solo podrás entrar con tu PIN.', aceptar: 'Desactivar' }))) return;
+            await desactivarBiometria(db);
+            mostrarAviso('Huella / Face ID desactivada.');
+            window.dispatchEvent(new HashChangeEvent('hashchange'));
+          })
+        : botonFila('Activar huella / Face ID', () => { window.location.hash = '/mas/biometria'; })
+      : null,
   );
 
   const tarjetaLicencia = h(
@@ -233,6 +246,31 @@ export async function renderCambiarPin(contenedor) {
 }
 
 // --- #/mas/recuperacion -------------------------------------------------------
+// --- #/mas/biometria: pide el PIN y registra la huella / Face ID -----------------------
+export async function renderBiometria(contenedor) {
+  const zona = h('div', { class: 'paso' });
+  agregar(contenedor, enlaceVolver(), zona);
+  const teclado = crearTecladoPin({
+    titulo: 'Activar huella / Face ID',
+    subtitulo: 'Primero escribe tu PIN. Luego el teléfono te pedirá tu huella o tu cara.',
+    alCompletar: async (pin) => {
+      const r = await verificarPin(pin);
+      if (!r.ok) return r;
+      const marca = await obtenerMarca();
+      const a = await activarBiometria({ nombreNegocio: marca?.nombre });
+      if (!a.ok) {
+        teclado.limpiar();
+        return { ok: false, error: a.error };
+      }
+      mostrarAviso('Listo: ya puedes entrar con tu huella o Face ID.');
+      volver();
+      return { ok: true };
+    },
+  });
+  agregar(zona, teclado.elemento);
+  return () => teclado.destruir();
+}
+
 export async function renderRecuperacion(contenedor) {
   const zona = h('div', { class: 'paso' });
   agregar(contenedor, enlaceVolver(), zona);
