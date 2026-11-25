@@ -178,7 +178,7 @@ tests/ (unit/, data/ con generador de 500 pedidos)
 
 
 ## Google Drive (opcional, pedido de la dueña)
-- Proyecto de Google Cloud «Ventas LIVE» con la cuenta soporte.ventaslive@gmail.com. ID de cliente (público) en `core/drive-config.js`. El secreto del cliente NO se usa. Origen autorizado: https://registro-ventas-live.pages.dev. Pantalla de consentimiento: externa, en modo PRUEBA (solo usuarios de prueba) hasta que la dueña toque «Publicar app».
+- Proyecto de Google Cloud «Ventas LIVE» con la cuenta soporte.ventaslive@gmail.com. ID de cliente (público) en `core/drive-config.js`. El secreto del cliente NO se usa. Origen autorizado: https://registro-ventas-live.pages.dev. Pantalla de consentimiento: externa, PUBLICADA (en producción, 25/11/2026) con marca: página principal, privacidad y términos en registro-ventas-live.pages.dev; sin logo (subir logo exige verificación). drive.file es no sensible: sin límite de usuarios. Probado con el Drive real de la dueña.
 - `services/drive.js`: Google Identity Services (token, ~1 h, solo en memoria), alcance `drive.file`; carpeta «Ventas LIVE – Respaldos»; subida reanudable en trozos de 8 MB; listar/descargar; conserva los 7 últimos de «datos» y NUNCA borra fotos ni completos. Conexión en ajuste `drive.conexion` (del dispositivo: no viaja en respaldos).
 - UI: `ui/drive-ui.js` (tarjeta en Respaldos y en la bienvenida para teléfono nuevo; botón «Subir a Google Drive» tras crear un respaldo). `panelRestaurar().restaurarArchivos(files)` restaura archivos bajados de Drive.
 - Pruebas: `tests/unit/drive.test.js` con Drive simulado (mismas URLs). No hay acceso a Google real desde el entorno de desarrollo: la prueba real la hace la dueña.
