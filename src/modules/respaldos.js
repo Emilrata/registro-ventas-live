@@ -8,6 +8,14 @@ import { crearRespaldo, fotosSinRespaldar, TIPOS_RESPALDO } from '../services/re
 import { panelRestaurar } from '../ui/restaurar-ui.js';
 import { mostrarAviso } from '../ui/actualizacion.js';
 
+function puedeCompartir(blob, nombre) {
+  try {
+    return Boolean(navigator.canShare?.({ files: [new File([blob], nombre, { type: 'application/zip' })] }));
+  } catch {
+    return false;
+  }
+}
+
 async function guardarArchivo(blob, nombre) {
   const archivo = new File([blob], nombre, { type: 'application/zip' });
   if (navigator.canShare?.({ files: [archivo] })) {
@@ -70,8 +78,15 @@ export async function render(contenedor) {
       agregar(resultado,
         h('p', { class: 'aviso' },
           `Listo: respaldo ${TIPOS_RESPALDO[tipo].toLowerCase()}${r.conteos ? ` con ${r.conteos.pedidos} pedidos` : ''}${tipo !== 'datos' ? `, ${r.archivos} fotos y comprobantes` : ''} (${formatearBytes(r.bytes)})${contrasena ? ', con contraseña' : ''}. Guárdalo fuera del teléfono, por ejemplo en Google Drive.`),
-        h('button', { class: 'boton boton--primario boton--ancho', type: 'button', onclick: () => guardarArchivo(r.blob, r.nombre) }, 'Guardar en Drive / compartir'),
-        h('button', { class: 'boton boton--secundario boton--ancho', type: 'button', onclick: () => descargar(r.blob, r.nombre) }, 'Descargar al teléfono'));
+        // El botón de compartir solo aparece si el navegador de verdad puede abrir el menú
+        // de compartir del teléfono (Chrome sí; Brave, por ejemplo, no comparte archivos).
+        puedeCompartir(r.blob, r.nombre)
+          ? h('button', { class: 'boton boton--primario boton--ancho', type: 'button', onclick: () => guardarArchivo(r.blob, r.nombre) }, 'Compartir (elige Drive en el menú)')
+          : null,
+        h('button', { class: `boton ${puedeCompartir(r.blob, r.nombre) ? 'boton--secundario' : 'boton--primario'} boton--ancho`, type: 'button', onclick: () => descargar(r.blob, r.nombre) }, 'Descargar al teléfono'),
+        h('p', { class: 'campo__ayuda' },
+          'La app no entra a tu Drive. Para guardarlo ahí: abre la app Google Drive → botón + → Subir → carpeta Descargas → elige el archivo ',
+          h('strong', {}, r.nombre), '.'));
       resultado.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (err) {
       console.error(err);
