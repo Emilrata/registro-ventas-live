@@ -37,6 +37,9 @@ import * as pedidoForm from './modules/pedido-form.js';
 import * as pedidoDetalle from './modules/pedido-detalle.js';
 import * as respaldos from './modules/respaldos.js';
 import * as pagoForm from './modules/pago-form.js';
+import * as entregaForm from './modules/entrega-form.js';
+import * as devolucionForm from './modules/devolucion-form.js';
+import * as vencimientos from './modules/vencimientos.js';
 import { mostrarAsistente } from './modules/bienvenida.js';
 import { mostrarBloqueo } from './modules/bloqueo.js';
 
@@ -50,6 +53,9 @@ const RUTAS = {
   '/pedidos/editar': { titulo: 'Editar pedido', render: pedidoForm.render },
   '/pedidos/ver': { titulo: 'Pedido', render: pedidoDetalle.render },
   '/pedidos/pagar': { titulo: 'Registrar pago', render: pagoForm.render },
+  '/pedidos/entregar': { titulo: 'Entregar', render: entregaForm.render },
+  '/pedidos/devolver': { titulo: 'Devolución', render: devolucionForm.render },
+  '/vencimientos': { titulo: 'Vencimientos', render: vencimientos.render },
   '/grupos/pagar': { titulo: 'Cobrar grupo', render: pagoForm.render },
   '/clientes/ver': { titulo: 'Clienta', render: clientes.renderDetalle },
   '/clientes/editar': { titulo: 'Editar clienta', render: clientes.renderEditar },

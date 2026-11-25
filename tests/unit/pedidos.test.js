@@ -222,3 +222,17 @@ describe('grupos', () => {
     expect((await db.pedidos.get(ps[2].id)).grupoId).toBeNull();
   });
 });
+
+describe('filtro por estado', () => {
+  it('lista por estado con paginación correcta, también dentro de una transmisión', async () => {
+    const t = await crearTransmision({ nombre: 'LIVE' }, db);
+    const ids = [];
+    for (let i = 0; i < 6; i += 1) ids.push((await nuevo({ transmisionId: t.id })).id);
+    for (const id of ids.slice(0, 4)) await db.pedidos.update(id, { estado: 'entregado' });
+    expect((await listarPedidos({ estado: 'pendiente' }, db)).map((p) => p.id)).toEqual([ids[5], ids[4]]);
+    expect((await listarPedidos({ estado: 'entregado', limite: 3 }, db)).map((p) => p.id)).toEqual([ids[3], ids[2], ids[1]]);
+    expect((await listarPedidos({ estado: 'entregado', desde: 3, limite: 3 }, db)).map((p) => p.id)).toEqual([ids[0]]);
+    expect((await listarPedidos({ estado: 'pendiente', transmisionId: t.id, limite: 1 }, db)).map((p) => p.id)).toEqual([ids[5]]);
+    expect((await listarPedidos({ estado: 'pendiente', transmisionId: t.id, desde: 1, limite: 1 }, db)).map((p) => p.id)).toEqual([ids[4]]);
+  });
+});

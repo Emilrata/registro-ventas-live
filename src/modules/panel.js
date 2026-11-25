@@ -8,6 +8,7 @@ import { obtenerBD } from '../core/db.js';
 import { listarPedidos } from '../services/pedidos.js';
 import { agregarFotoPrincipal, tarjetaPedido } from '../ui/pedidos-ui.js';
 import { crearGaleria } from '../ui/fotos.js';
+import { pedidosPorVencer } from '../services/vencimientos.js';
 
 export async function render(contenedor) {
   const db = obtenerBD();
@@ -33,6 +34,7 @@ export async function render(contenedor) {
   const totalPedidos = await db.pedidos.count();
   const ultimo = (await db.ajustes.get('respaldo.ultimo'))?.valor ?? null;
   const horasSinRespaldo = ultimo ? (Date.now() - new Date(ultimo.fecha).getTime()) / 3600000 : Infinity;
+  const { vencidos, porVencer } = await pedidosPorVencer({ db });
   const recientes = await agregarFotoPrincipal(await listarPedidos({ limite: 5 }, db), db);
 
   agregar(contenedor, 
@@ -49,6 +51,11 @@ export async function render(contenedor) {
       h('div', { class: 'indicador' }, h('span', { class: 'indicador__valor numero' }, formatearMonto(ventasHoy)), h('span', { class: 'indicador__etiqueta' }, 'Ventas generadas hoy')),
       h('a', { class: 'indicador indicador--ancho indicador--enlace', href: '#/cobros' }, h('span', { class: 'indicador__valor numero' }, formatearMonto(cobradoHoy)), h('span', { class: 'indicador__etiqueta' }, 'Cobrado hoy (dinero recibido)')),
     ),
+    vencidos.length || porVencer.length
+      ? h('a', { class: `aviso aviso--enlace${vencidos.length ? ' aviso--error' : ''}`, href: '#/vencimientos' },
+          [vencidos.length ? `${vencidos.length} ${vencidos.length === 1 ? 'pedido vencido' : 'pedidos vencidos'}` : null,
+            porVencer.length ? `${porVencer.length} por vencer` : null].filter(Boolean).join(' · ') + '. Toca para ver.')
+      : null,
     h('a', { class: 'boton boton--primario boton--ancho', href: '#/pedidos/nuevo' }, '+ Nuevo pedido'),
     totalPedidos === 0
       ? estadoVacio('Todavía no hay pedidos', 'Aquí verás las ventas, los cobros y lo pendiente del día.')

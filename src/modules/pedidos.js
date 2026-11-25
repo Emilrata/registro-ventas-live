@@ -15,6 +15,7 @@ export async function render(contenedor, { params }) {
   const galeria = crearGaleria();
   let texto = params.q ?? '';
   let transmisionId = params.t ? Number(params.t) : null;
+  let estado = ['pendiente', 'entregado', 'cancelado'].includes(params.estado) ? params.estado : '';
   let desde = 0;
   let turno = 0;
 
@@ -29,6 +30,18 @@ export async function render(contenedor, { params }) {
     h('option', { value: '' }, 'Todas las transmisiones'),
     ...transmisiones.map((t) => h('option', { value: String(t.id), selected: t.id === transmisionId }, `${t.nombre} · ${formatearFecha(t.fecha)}`)),
   );
+  const filtroEstado = h(
+    'select',
+    { class: 'entrada', id: 'filtro-estado', 'aria-label': 'Estado' },
+    h('option', { value: '' }, 'Todos los estados'),
+    h('option', { value: 'pendiente', selected: estado === 'pendiente' }, 'Pendientes de entrega'),
+    h('option', { value: 'entregado', selected: estado === 'entregado' }, 'Entregados'),
+    h('option', { value: 'cancelado', selected: estado === 'cancelado' }, 'Cancelados'),
+  );
+  filtroEstado.addEventListener('change', () => {
+    estado = filtroEstado.value;
+    cargar({ reiniciar: true });
+  });
   const lista = h('div', { class: 'lista' });
   const mas = h('button', { class: 'boton boton--secundario boton--ancho', type: 'button', hidden: true }, 'Ver más');
 
@@ -39,8 +52,9 @@ export async function render(contenedor, { params }) {
     if (texto.trim()) {
       pedidos = await buscarPedidos(texto, { limite: 100, db });
       if (transmisionId) pedidos = pedidos.filter((p) => p.transmisionId === transmisionId);
+      if (estado) pedidos = pedidos.filter((p) => p.estado === estado);
     } else {
-      pedidos = await listarPedidos({ desde, limite: POR_PAGINA, transmisionId: transmisionId ?? undefined }, db);
+      pedidos = await listarPedidos({ desde, limite: POR_PAGINA, transmisionId: transmisionId ?? undefined, estado: estado || undefined }, db);
     }
     pedidos = await agregarFotoPrincipal(pedidos, db);
     if (miTurno !== turno) return; // llegó otra búsqueda más nueva
@@ -77,7 +91,7 @@ export async function render(contenedor, { params }) {
   agregar(contenedor, 
     encabezado('Pedidos'),
     h('a', { class: 'boton boton--primario boton--ancho', href: '#/pedidos/nuevo' }, '+ Nuevo pedido'),
-    h('div', { class: 'filtros' }, buscador, transmisiones.length ? filtro : null),
+    h('div', { class: 'filtros' }, buscador, filtroEstado, transmisiones.length ? filtro : null),
     lista,
     mas,
   );

@@ -574,3 +574,21 @@ details.tarjeta summary {
 .tarjeta-pago--anulacion .tarjeta-pedido__total {
   color: var(--secundario);
 }
+
+/* Al escribir en un campo, el navegador lo deja por encima de la barra fija de guardar. */
+html {
+  scroll-padding-bottom: calc(var(--alto-nav) + env(safe-area-inset-bottom) + 96px);
+}
+
+.barra-guardar {
+  padding: 8px 10px 8px 14px;
+}
+
+.tarjeta--compacta {
+  gap: 4px;
+}
+
+.enlace-limpio {
+  text-decoration: none;
+  color: inherit;
+}

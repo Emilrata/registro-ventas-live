@@ -300,8 +300,12 @@ async function completar(pedidos, db) {
 }
 
 /** Pedidos más recientes primero. filtro: { transmisionId, clienteId } */
-export async function listarPedidos({ desde = 0, limite = 30, transmisionId, clienteId } = {}, db = obtenerBD()) {
+export async function listarPedidos({ desde = 0, limite = 30, transmisionId, clienteId, estado } = {}, db = obtenerBD()) {
   let coleccion;
+  if (!clienteId && !transmisionId && estado) {
+    const pedidos = await db.pedidos.where('estado').equals(estado).reverse().offset(desde).limit(limite).toArray();
+    return completar(pedidos, db);
+  }
   if (clienteId) {
     coleccion = db.pedidos.where('[clienteId+creadoEn]').between([clienteId, ''], [clienteId, '￿']).reverse();
   } else if (transmisionId) {
@@ -309,6 +313,8 @@ export async function listarPedidos({ desde = 0, limite = 30, transmisionId, cli
   } else {
     coleccion = db.pedidos.orderBy('creadoEn').reverse();
   }
+  // El filtro va ANTES de offset/limit para que la paginación sea correcta.
+  if (estado) coleccion = coleccion.filter((p) => p.estado === estado);
   const pedidos = await coleccion.offset(desde).limit(limite).toArray();
   if (transmisionId && !clienteId) pedidos.sort((a, b) => b.creadoEn.localeCompare(a.creadoEn));
   return completar(pedidos, db);

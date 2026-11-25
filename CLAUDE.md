@@ -108,7 +108,7 @@ tests/ (unit/, data/ con generador de 500 pedidos)
 - Una etapa por sesión. Al terminar, commit y resumen de qué probar.
 - Editar solo los archivos necesarios.
 - Interfaz y mensajes en español.
-- Estado actual: etapas 1 a 4 terminadas en código. App publicada en https://registro-ventas-live.pages.dev (Cloudflare Pages, rama `main`). Etapa 4 (pagos) terminada. Siguiente: etapa 5 (entregas).
+- Estado actual: etapas 1 a 5 terminadas en código. App publicada en https://registro-ventas-live.pages.dev (Cloudflare Pages, rama `main`). Siguiente: etapa 6 (estadísticas e informes).
 
 ## Notas de la etapa 1
 - Router por hash (`#/panel`), sin configuración de servidor.
@@ -143,3 +143,12 @@ tests/ (unit/, data/ con generador de 500 pedidos)
 - Pago de más bloqueado; no se paga un pedido cancelado; no se anula si quedaría menos que lo reembolsado.
 - Cobros por día local; las anulaciones restan el día en que se hacen. Panel muestra ventas generadas y cobrado hoy por separado.
 - 20 casos de saldo en `tests/unit/pagos.test.js`.
+
+## Notas de la etapa 5
+- `services/entregas.js`: `registrarEntrega` (pedido o grupo; recojo o envío; exige `aceptarSaldo` si hay saldo; marca `vencido`), `confirmarRecepcion` (envío), `deshacerEntrega` (la entrega queda con `anulada`, no se borra), `cancelarPedido` (solo pendientes; guarda `cancelacion`).
+- Pedido entregado guarda `entregaId`. Entrega guarda `pedidos` (ids), `saldoAlEntregar`, `vencido`, `anulada`. Envío en grupo: un `costoEnvio` en la entrega (no cambia totales de pedidos).
+- `services/devoluciones.js`: solo se agregan; `anularDevolucion` crea registro negativo con `anulaA`. No más de pagado − reembolsado. En pedido no cancelado exige `excepcion`. `pedido.reembolsado` se recalcula sumando la tabla.
+- `services/vencimientos.js`: vencido = pasó el día local de `fechaLimite`; aviso desde el día 25 (ajuste `pedidos.diasAviso`).
+- `services/mensajes.js`: textos de WhatsApp (listo, recordatorio, saldo, enviado) y `enlaceWhatsApp` (wa.me). Solo abre WhatsApp; no envía nada solo.
+- Los cancelados no suman al total del grupo. Lista de pedidos filtra por estado (filtro antes de offset/limit).
+- Prueba «nada borra fotos ni pagos» en `tests/unit/entregas.test.js`.

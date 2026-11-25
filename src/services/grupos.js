@@ -84,6 +84,7 @@ export async function obtenerGrupo(id, db = obtenerBD()) {
   const grupo = await db.grupos.get(id);
   if (!grupo) return null;
   const pedidos = (await db.pedidos.where('grupoId').equals(id).toArray()).sort((a, b) => a.creadoEn.localeCompare(b.creadoEn));
-  const total = pedidos.reduce((s, p) => s + p.total, 0);
+  // Los pedidos cancelados siguen en el grupo (agrupar no altera nada), pero no suman.
+  const total = pedidos.filter((p) => p.estado !== 'cancelado').reduce((s, p) => s + p.total, 0);
   return { grupo, pedidos, total };
 }
