@@ -54,7 +54,7 @@ export function tarjetaDrive({ db, panelRestaurar, modo = 'completo' }) {
         try {
           await conectarDrive(db);
           mostrarAviso('Google Drive conectado.');
-          await dibujar();
+          emit('drive:conexion');
         } catch (err) {
           console.error(err);
           estado.textContent = mensajeError(err);
@@ -79,7 +79,7 @@ export function tarjetaDrive({ db, panelRestaurar, modo = 'completo' }) {
             onclick: async () => {
               if (!(await confirmar({ titulo: 'Desconectar Google Drive', texto: 'Los respaldos que ya están en tu Drive no se borran.', aceptar: 'Desconectar' }))) return;
               await desconectarDrive(db);
-              await dibujar();
+              emit('drive:conexion');
             },
           }, 'Desconectar Google Drive')
         : null);
@@ -140,7 +140,13 @@ export function tarjetaDrive({ db, panelRestaurar, modo = 'completo' }) {
   }
   dibujar();
   // Se actualiza al subir un respaldo; deja de escuchar cuando la tarjeta sale de la pantalla.
-  const quitar = on('drive:cambio', () => (tarjeta.isConnected ? dibujar() : quitar()));
+  const alCambiar = () => (tarjeta.isConnected ? dibujar() : quitarTodo());
+  const quitarCambio = on('drive:cambio', alCambiar);
+  const quitarConexion = on('drive:conexion', alCambiar);
+  const quitarTodo = () => {
+    quitarCambio();
+    quitarConexion();
+  };
   return tarjeta;
 }
 

@@ -7,6 +7,7 @@ import { formatearBytes } from '../services/almacenamiento.js';
 import { crearRespaldo, fotosSinRespaldar, TIPOS_RESPALDO } from '../services/respaldo.js';
 import { panelRestaurar } from '../ui/restaurar-ui.js';
 import { botonSubirADrive, tarjetaDrive } from '../ui/drive-ui.js';
+import { on } from '../core/events.js';
 import { mostrarAviso } from '../ui/actualizacion.js';
 
 function puedeCompartir(blob, nombre) {
@@ -76,7 +77,12 @@ export async function render(contenedor) {
     reemplazar(resultado);
     try {
       const r = await crearRespaldo({ tipo, contrasena, db });
-      const subir = await botonSubirADrive(r.blob, r.nombre, db);
+      // Zona del botón «Subir a Google Drive»: aparece también si Drive se conecta después.
+      const subir = h('div');
+      const dibujarSubir = async () => reemplazar(subir, (await botonSubirADrive(r.blob, r.nombre, db)) ?? '');
+      await dibujarSubir();
+      // Solo al conectar o desconectar (no al subir: borraría el «✓ Guardado»).
+      const quitar = on('drive:conexion', () => (subir.isConnected ? dibujarSubir() : quitar()));
       agregar(resultado,
         h('p', { class: 'aviso' },
           `Listo: respaldo ${TIPOS_RESPALDO[tipo].toLowerCase()}${r.conteos ? ` con ${r.conteos.pedidos} pedidos` : ''}${tipo !== 'datos' ? `, ${r.archivos} fotos y comprobantes` : ''} (${formatearBytes(r.bytes)})${contrasena ? ', con contraseña' : ''}. Guárdalo fuera del teléfono, por ejemplo en Google Drive.`),
@@ -87,7 +93,7 @@ export async function render(contenedor) {
           ? h('button', { class: 'boton boton--primario boton--ancho', type: 'button', onclick: () => guardarArchivo(r.blob, r.nombre) }, 'Compartir (elige Drive en el menú)')
           : null,
         h('button', { class: `boton ${puedeCompartir(r.blob, r.nombre) ? 'boton--secundario' : 'boton--primario'} boton--ancho`, type: 'button', onclick: () => descargar(r.blob, r.nombre) }, 'Descargar al teléfono'),
-        subir ? null : h('p', { class: 'campo__ayuda' },
+        h('p', { class: 'campo__ayuda' },
           'La app no entra a tu Drive. Para guardarlo ahí: abre la app Google Drive → botón + → Subir → carpeta Descargas → elige el archivo ',
           h('strong', {}, r.nombre), '.'));
       resultado.scrollIntoView({ behavior: 'smooth', block: 'start' });
