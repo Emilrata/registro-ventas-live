@@ -108,7 +108,7 @@ tests/ (unit/, data/ con generador de 500 pedidos)
 - Una etapa por sesión. Al terminar, commit y resumen de qué probar.
 - Editar solo los archivos necesarios.
 - Interfaz y mensajes en español.
-- Estado actual: etapas 1, 2 y 3 terminadas en código. App publicada en https://registro-ventas-live.pages.dev (Cloudflare Pages, rama `main`). Siguiente: etapa 4 (pagos).
+- Estado actual: etapas 1 a 4 terminadas en código. App publicada en https://registro-ventas-live.pages.dev (Cloudflare Pages, rama `main`). Etapa 4 (pagos) terminada. Siguiente: etapa 5 (entregas).
 
 ## Notas de la etapa 1
 - Router por hash (`#/panel`), sin configuración de servidor.
@@ -136,3 +136,10 @@ tests/ (unit/, data/ con generador de 500 pedidos)
 - Respaldo: ZIP sin compresión (fflate), `manifiesto.json` con SHA-256 de cada archivo; restaurar verifica todo antes, hace copia interna (`copiaInterna`) y reemplaza todo en una transacción, conservando `seguridad.*`, `licencia` y `configuracion.completa` del teléfono.
 - UI: usar `agregar()`/`reemplazar()` de `ui/dom.js` en vez de `append`/`replaceChildren` (estos escriben «null»).
 - Pruebas de volumen: `tests/data/generador.js` y `tests/unit/volumen.test.js`.
+
+## Notas de la etapa 4
+- `services/pagos.js`: `registrarPago`, `anularPago` (registro nuevo con monto negativo y `anulaA`), `pagarGrupo` (más antiguo → más nuevo, un registro por pedido, comprobante compartido), `cobrosEntre`, `pedidosPorCobrar`.
+- `pedido.pagado` se recalcula SIEMPRE sumando la tabla `pagos`. Pagos llevan `grupoId` (null si es individual) y `actor`.
+- Pago de más bloqueado; no se paga un pedido cancelado; no se anula si quedaría menos que lo reembolsado.
+- Cobros por día local; las anulaciones restan el día en que se hacen. Panel muestra ventas generadas y cobrado hoy por separado.
+- 20 casos de saldo en `tests/unit/pagos.test.js`.

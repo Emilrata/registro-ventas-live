@@ -520,3 +520,57 @@ details.tarjeta summary {
   font-size: 0.8125rem;
   color: var(--secundario);
 }
+
+/* Pagos */
+.pago-fila {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid var(--linea);
+}
+
+.pago-fila--anulado .prenda-fila__subtotal {
+  text-decoration: line-through;
+  color: var(--secundario);
+}
+
+.pago-fila__derecha {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.pago-fila__derecha .boton--enlace {
+  min-height: 36px;
+  padding: 0;
+  color: var(--secundario);
+}
+
+.entrada--monto {
+  font-size: 1.375rem;
+  font-weight: 600;
+}
+
+.indicador--ancho {
+  grid-column: 1 / -1;
+}
+
+.indicador--enlace {
+  text-decoration: none;
+  color: inherit;
+}
+
+.tarjeta-pago {
+  display: flex;
+  padding: 10px 14px;
+  background: var(--tarjeta);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  text-decoration: none;
+  color: inherit;
+}
+
+.tarjeta-pago--anulacion .tarjeta-pedido__total {
+  color: var(--secundario);
+}

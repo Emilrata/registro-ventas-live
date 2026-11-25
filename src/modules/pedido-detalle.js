@@ -10,13 +10,18 @@ import { obtenerGrupo, quitarDeGrupo } from '../services/grupos.js';
 import { historialDe } from '../repositories/historial.repo.js';
 import { chipEstado, chipPago, textoVencimiento } from '../ui/pedidos-ui.js';
 import { abrirVisor, crearGaleria } from '../ui/fotos.js';
-import { confirmar } from '../ui/dialogo.js';
+import { confirmar, pedirTexto } from '../ui/dialogo.js';
+import { anularPago, pagosDePedido, TEXTO_METODO } from '../services/pagos.js';
 import { mostrarAviso } from '../ui/actualizacion.js';
 
 const TEXTO_HISTORIAL = {
   'pedido-creado': 'Pedido creado',
   'pedido-editado': 'Pedido editado',
+  'pago-registrado': 'Pago registrado',
+  'pago-anulado': 'Pago anulado',
 };
+
+const recargar = () => window.dispatchEvent(new HashChangeEvent('hashchange'));
 
 export async function render(contenedor, { params }) {
   const db = obtenerBD();
@@ -68,6 +73,10 @@ export async function render(contenedor, { params }) {
         h('p', { class: 'texto-secundario' }, `${g.pedidos.length} pedidos · ${formatearMonto(g.total)}`),
         ...g.pedidos.map((p) =>
           h('a', { class: 'accion', href: `#/pedidos/ver?id=${p.id}` }, h('span', { class: 'numero' }, `${p.codigo}${p.id === id ? ' (este)' : ''}`), h('span', { class: 'numero' }, formatearMonto(p.total)))),
+        g.pedidos.some((p) => p.estado !== 'cancelado' && saldoPendiente(p) > 0)
+          ? h('a', { class: 'boton boton--primario', href: `#/grupos/pagar?grupo=${g.grupo.id}` },
+              `Cobrar grupo (${formatearMonto(g.pedidos.filter((p) => p.estado !== 'cancelado').reduce((s2, p) => s2 + saldoPendiente(p), 0))})`)
+          : null,
         pedido.estado === 'pendiente'
           ? h('button', {
               class: 'boton boton--secundario', type: 'button',
@@ -76,13 +85,68 @@ export async function render(contenedor, { params }) {
                 if (!ok) return;
                 const r = await quitarDeGrupo(id, db);
                 mostrarAviso(r.ok ? 'Pedido quitado del grupo.' : r.error);
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                recargar();
               },
             }, 'Quitar de este grupo')
           : null,
       );
     }
   }
+
+  // Pagos
+  const pagos = await pagosDePedido(id, db);
+  const saldo = saldoPendiente(pedido);
+  const filaPago = (p) => {
+    const esAnulacion = p.anulaA !== null;
+    const caja = h('button', { class: 'mini-caja', type: 'button', 'aria-label': 'Ver comprobante' });
+    if (p.comprobanteId) {
+      galeria.miniatura(p.comprobanteId).then((u) => u && agregar(caja, h('img', { class: 'mini', src: u, alt: '' })));
+      caja.addEventListener('click', async () => abrirVisor(await galeria.completa(p.comprobanteId), 'Comprobante'));
+    } else {
+      caja.classList.add('sin-foto');
+      caja.disabled = true;
+    }
+    return h(
+      'div',
+      { class: `pago-fila${p.anulado ? ' pago-fila--anulado' : ''}` },
+      caja,
+      h('div', { class: 'prenda-fila__texto' },
+        h('span', {}, esAnulacion ? 'Anulación' : `${TEXTO_METODO[p.metodo]}${p.grupoId ? ' · pago de grupo' : ''}`),
+        h('span', { class: 'texto-secundario numero' }, formatearFechaHora(p.fechaHora)),
+        p.nota ? h('span', { class: 'texto-secundario' }, p.nota) : null,
+        p.anulado ? h('span', { class: 'texto-secundario' }, 'Anulado') : null),
+      h('div', { class: 'pago-fila__derecha' },
+        h('span', { class: 'numero prenda-fila__subtotal' }, formatearMonto(p.monto)),
+        !esAnulacion && !p.anulado
+          ? h('button', {
+              class: 'boton boton--enlace boton--chico', type: 'button',
+              onclick: async () => {
+                const motivo = await pedirTexto({
+                  titulo: `Anular pago de ${formatearMonto(p.monto)}`,
+                  texto: 'El pago no se borra: queda registrado junto con su anulación.',
+                  aceptar: 'Anular', peligro: true,
+                });
+                if (!motivo) return;
+                const r = await anularPago(p.id, { motivo, db });
+                mostrarAviso(r.ok ? 'Pago anulado.' : r.error);
+                if (r.ok) recargar();
+              },
+            }, 'Anular')
+          : null),
+    );
+  };
+  const tarjetaPagos = h(
+    'section',
+    { class: 'tarjeta' },
+    h('h2', { class: 'tarjeta__titulo' }, 'Pagos'),
+    fila('Total', formatearMonto(pedido.total)),
+    fila('Pagado', formatearMonto(pedido.pagado - pedido.reembolsado)),
+    fila('Saldo', formatearMonto(saldo)),
+    pagos.length ? h('div', { class: 'lista-prendas' }, ...pagos.map(filaPago)) : null,
+    pedido.estado !== 'cancelado' && saldo > 0
+      ? h('a', { class: 'boton boton--primario', href: `#/pedidos/pagar?id=${id}` }, 'Registrar pago')
+      : null,
+  );
 
   // Historial
   const historial = await historialDe('pedido', id, db);
@@ -123,9 +187,8 @@ export async function render(contenedor, { params }) {
       fila('Prendas', formatearMonto(pedido.totalPrendas)),
       pedido.modalidad === 'envio' ? fila('Envío', formatearMonto(pedido.envio)) : null,
       fila('Total', formatearMonto(pedido.total)),
-      fila('Pagado', formatearMonto(pedido.pagado - pedido.reembolsado)),
-      fila('Saldo', formatearMonto(saldoPendiente(pedido))),
     ),
+    tarjetaPagos,
     h(
       'section',
       { class: 'tarjeta' },

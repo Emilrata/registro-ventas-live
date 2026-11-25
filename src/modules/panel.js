@@ -26,6 +26,10 @@ export async function render(contenedor) {
     (p) => claveDia(p.creadoEn) === hoy && p.estado !== 'cancelado',
   );
   const ventasHoy = deHoy.reduce((s, p) => s + p.total, 0);
+  // Dinero cobrado hoy (pagos menos anulaciones hechas hoy), aparte de las ventas.
+  const cobradoHoy = (await db.pagos.where('fechaHora').aboveOrEqual(inicio.toISOString()).toArray())
+    .filter((p) => claveDia(p.fechaHora) === hoy)
+    .reduce((s, p) => s + p.monto, 0);
   const totalPedidos = await db.pedidos.count();
   const ultimo = (await db.ajustes.get('respaldo.ultimo'))?.valor ?? null;
   const horasSinRespaldo = ultimo ? (Date.now() - new Date(ultimo.fecha).getTime()) / 3600000 : Infinity;
@@ -43,6 +47,7 @@ export async function render(contenedor) {
       { class: 'indicadores' },
       h('div', { class: 'indicador' }, h('span', { class: 'indicador__valor numero' }, String(deHoy.length)), h('span', { class: 'indicador__etiqueta' }, 'Pedidos de hoy')),
       h('div', { class: 'indicador' }, h('span', { class: 'indicador__valor numero' }, formatearMonto(ventasHoy)), h('span', { class: 'indicador__etiqueta' }, 'Ventas generadas hoy')),
+      h('a', { class: 'indicador indicador--ancho indicador--enlace', href: '#/cobros' }, h('span', { class: 'indicador__valor numero' }, formatearMonto(cobradoHoy)), h('span', { class: 'indicador__etiqueta' }, 'Cobrado hoy (dinero recibido)')),
     ),
     h('a', { class: 'boton boton--primario boton--ancho', href: '#/pedidos/nuevo' }, '+ Nuevo pedido'),
     totalPedidos === 0

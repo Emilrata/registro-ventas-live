@@ -36,6 +36,7 @@ import * as mas from './modules/mas.js';
 import * as pedidoForm from './modules/pedido-form.js';
 import * as pedidoDetalle from './modules/pedido-detalle.js';
 import * as respaldos from './modules/respaldos.js';
+import * as pagoForm from './modules/pago-form.js';
 import { mostrarAsistente } from './modules/bienvenida.js';
 import { mostrarBloqueo } from './modules/bloqueo.js';
 
@@ -48,6 +49,8 @@ const RUTAS = {
   '/pedidos/nuevo': { titulo: 'Nuevo pedido', render: pedidoForm.render },
   '/pedidos/editar': { titulo: 'Editar pedido', render: pedidoForm.render },
   '/pedidos/ver': { titulo: 'Pedido', render: pedidoDetalle.render },
+  '/pedidos/pagar': { titulo: 'Registrar pago', render: pagoForm.render },
+  '/grupos/pagar': { titulo: 'Cobrar grupo', render: pagoForm.render },
   '/clientes/ver': { titulo: 'Clienta', render: clientes.renderDetalle },
   '/clientes/editar': { titulo: 'Editar clienta', render: clientes.renderEditar },
   '/mas/respaldos': { titulo: 'Respaldos', render: respaldos.render },
