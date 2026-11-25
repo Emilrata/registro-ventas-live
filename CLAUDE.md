@@ -173,6 +173,6 @@ tests/ (unit/, data/ con generador de 500 pedidos)
 
 ## Páginas legales
 - `public/legal/privacidad/` y `public/legal/terminos/` (+ `legal.css`): precacheadas (abren sin internet), enlazadas desde Más → Legal y la bienvenida. Incluyen la sección de Google Drive con la declaración de «Uso limitado» que exige Google.
-- Proveedor: Ventas Live Bolivia, Santa Cruz de la Sierra. Pendiente solo el correo (`<span class="pendiente" data-dato="correo">`): la dueña creará un Gmail nuevo para la app (también para el proyecto de Google Cloud).
+- Proveedor: Ventas Live Bolivia, Santa Cruz de la Sierra. Correo de contacto: soporte.ventaslive@gmail.com (también será la cuenta del proyecto de Google Cloud).
 - No son asesoría legal: recomendar revisión por abogado antes de vender.
 - Siguiente (pedido de la dueña): conexión opcional con Google Drive (OAuth con Google Identity Services, alcance `drive.file`, sin servidor). Requiere que la dueña cree un proyecto gratis en Google Cloud y entregue el ID de cliente.
