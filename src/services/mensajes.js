@@ -56,7 +56,9 @@ export function armarMensaje(tipo, { negocio, cliente, pedidos, prendas = {}, en
         '',
         ...resumenImportes(pedidos),
         '',
-        `Puedes recoger${varios ? 'los' : 'lo'} hasta el ${formatearFecha(limite)}.`,
+        diasEntre(ahora, limite) < 0
+          ? `El plazo para recoger${varios ? 'los' : 'lo'} venció el ${formatearFecha(limite)}. Escríbenos para coordinar la entrega.`
+          : `Puedes recoger${varios ? 'los' : 'lo'} hasta el ${formatearFecha(limite)}.`,
       ].join('\n') + firma;
 
     case 'recordatorio': {

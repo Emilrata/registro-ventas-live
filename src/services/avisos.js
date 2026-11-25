@@ -86,8 +86,10 @@ export async function clientasPorAvisar({ ahora = new Date(), db = obtenerBD() }
     const pedidos = porClienta.get(cliente.id).sort((a, b) => a.creadoEn.localeCompare(b.creadoEn));
     const tocan = pedidos.filter((p) => p.aviso.toca);
     if (!tocan.length) continue;
-    // Si algún pedido todavía no tuvo aviso, el mensaje es «está listo» (incluye todos los pendientes).
-    const tipo = tocan.some((p) => p.aviso.tipo === 'listo') ? 'listo' : 'recordatorio';
+    // Si algún pedido todavía no tuvo aviso, el mensaje es «está listo» (incluye todos los pendientes),
+    // salvo que alguno ya esté vencido: entonces se recuerda el vencimiento (nunca «puedes recoger hasta» una fecha pasada).
+    const vencido = pedidos.some((p) => p.fechaLimite && diasEntre(ahora, p.fechaLimite) < 0);
+    const tipo = !vencido && tocan.some((p) => p.aviso.tipo === 'listo') ? 'listo' : 'recordatorio';
     const ultimos = pedidos.map((p) => p.aviso.ultimoAviso).filter(Boolean).sort();
     grupos.push({
       cliente,

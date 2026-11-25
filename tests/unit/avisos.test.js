@@ -97,6 +97,16 @@ describe('clientas por avisar', () => {
     await expect(cambiarDiasRecordatorio(4, db)).rejects.toThrow();
   });
 
+  it('pedido vencido: recordatorio, nunca «puedes recoger hasta» una fecha pasada', async () => {
+    await pedido();
+    const r = await clientasPorAvisar({ db, ahora: dias(31) });
+    expect(r.grupos[0].tipo).toBe('recordatorio');
+    const { armarMensaje } = await import('../../src/services/mensajes.js');
+    const texto = armarMensaje('listo', { negocio: 'X', cliente: r.grupos[0].cliente, pedidos: r.grupos[0].pedidos, ahora: dias(31) });
+    expect(texto).toContain('venció el');
+    expect(texto).not.toContain('Puedes recoger');
+  });
+
   it('las notificaciones son del dispositivo: no viajan en los respaldos', () => {
     expect(esAjusteDelDispositivo('notificaciones.activas')).toBe(true);
     expect(esAjusteDelDispositivo('notificaciones.agenda')).toBe(true);
