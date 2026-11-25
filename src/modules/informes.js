@@ -99,7 +99,20 @@ export async function render(contenedor, { params }) {
       reemplazar(cuerpo, h('p', { class: 'aviso aviso--error' }, 'La fecha «desde» es posterior a «hasta».'));
       return;
     }
-    const e = await calcularEstadisticas({ desde, hasta, transmisionId }, { db });
+    // Con mucho volumen el cálculo puede tardar unos segundos en un celular: se avisa.
+    const aviso = setTimeout(() => {
+      cuerpo.classList.add('calculando');
+      cuerpo.setAttribute('aria-busy', 'true');
+      if (!cuerpo.querySelector('.aviso-calculando')) cuerpo.prepend(h('p', { class: 'aviso aviso-calculando', role: 'status' }, 'Calculando…'));
+    }, 250);
+    let e;
+    try {
+      e = await calcularEstadisticas({ desde, hasta, transmisionId }, { db });
+    } finally {
+      clearTimeout(aviso);
+      cuerpo.classList.remove('calculando');
+      cuerpo.removeAttribute('aria-busy');
+    }
     if (mio !== turno) return;
     grafico?.destroy();
     grafico = null;

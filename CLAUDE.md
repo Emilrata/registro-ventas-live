@@ -109,7 +109,7 @@ tests/ (unit/, data/ con generador de 500 pedidos)
 - Una etapa por sesión. Al terminar, commit y resumen de qué probar.
 - Editar solo los archivos necesarios.
 - Interfaz y mensajes en español.
-- Estado actual: etapas 1 a 7 terminadas en código. App publicada en https://registro-ventas-live.pages.dev (Cloudflare Pages, rama `main`). Siguiente: etapa 8 (pruebas finales).
+- Estado actual: etapas 1 a 8 terminadas (versión 1.0.0). App publicada en https://registro-ventas-live.pages.dev (Cloudflare Pages, rama `main`). Falta solo la prueba en dispositivos reales (sobre todo iPhone).
 
 ## Notas de la etapa 1
 - Router por hash (`#/panel`), sin configuración de servidor.
@@ -170,6 +170,13 @@ tests/ (unit/, data/ con generador de 500 pedidos)
 - `services/biometria.js`: WebAuthn de plataforma con `userVerification: 'required'`; se guarda la clave pública (SPKI) en `seguridad.biometria` y cada desbloqueo se verifica localmente (tipo, desafío, origen, rpIdHash, banderas UP+UV, firma ES256/RS256). Activar pide el PIN antes. Oculto si no hay soporte.
 - Prueba de la etapa: `tests/unit/respaldo-completo.test.js` (300 fotos, ~45 MB, con contraseña) y E2E de 200 pedidos con fotos JPEG restaurados en otro contexto de navegador.
 - Pendiente (desactivado por defecto en el documento): «archivo de fotos antiguas». No implementado para no arriesgar la regla de no borrar fotos.
+
+## Notas de la etapa 8
+- Volumen (Chromium, Pixel 7): 3000 pedidos, 800 clientas, 1500 fotos JPEG (62 MB). Panel ~0,3 s; lista ~30 ms; búsqueda por código ~0,3 s, por nombre ~0,55 s, por WhatsApp ~15 ms; detalle <40 ms; informes 30 días ~0,45 s, un año ~2,3 s (con aviso «Calculando…»); Excel del año ~2 s; respaldo completo 55 MB en 3,3 s; restauración en otro contexto ~10 s con conteos idénticos. Offline correcto.
+- 144 revisiones de pantalla (320 px, 360 px, 390 px, tablet, escritorio, ancho; claro y oscuro; 12 pantallas): sin desbordes, botones <44 px ni textos cortados. Sin errores de consola.
+- Compatibilidad: `index.html` detecta navegadores antiguos (`window.__navegadorAntiguo`: indexedDB, crypto.subtle, `<dialog>`, `Array.prototype.at`) y muestra aviso; mínimo iOS 15.4 / Chrome 92. `services/imagenes.js` → `abrirImagen` con respaldo (createImageBitmap con opciones → sin opciones → `<img>`) para Safari.
+- Formulario de pedido: precio vacío cuenta 0 en pantalla y al guardar pide «Escribe el precio de la prenda N».
+- Solo hay Chromium en el entorno: la prueba en iPhone/Safari, Windows y tablet real la hace la dueña con la lista de comprobación.
 
 ## Páginas legales
 - `public/legal/privacidad/` y `public/legal/terminos/` (+ `legal.css`): precacheadas (abren sin internet), enlazadas desde Más → Legal y la bienvenida. Incluyen la sección de Google Drive con la declaración de «Uso limitado» que exige Google.

@@ -35,6 +35,24 @@
     </div>
     <div class="acceso" id="acceso" hidden></div>
     <div class="avisos" id="avisos" aria-live="polite"></div>
+    <script>
+      // Teléfonos o navegadores demasiado antiguos: mensaje claro en vez de una pantalla en blanco.
+      (function () {
+        var faltan = !('indexedDB' in window) || !(window.crypto && window.crypto.subtle) ||
+          typeof HTMLDialogElement === 'undefined' || !('showModal' in HTMLDialogElement.prototype) ||
+          !Array.prototype.at || typeof Promise === 'undefined';
+        if (!faltan) return;
+        window.__navegadorAntiguo = true;
+        document.addEventListener('DOMContentLoaded', function () {
+          document.body.innerHTML = '<div style="font-family:system-ui,sans-serif;padding:32px 20px;max-width:480px;margin:auto;line-height:1.5">' +
+            '<h1 style="font-weight:400">Hay que actualizar el navegador</h1>' +
+            '<p>Este teléfono o navegador es muy antiguo para la app.</p>' +
+            '<ul><li>iPhone o iPad: actualiza a iOS 15.4 o más nuevo (Ajustes → General → Actualización de software) y usa Safari.</li>' +
+            '<li>Android: actualiza Google Chrome desde Play Store.</li></ul></div>';
+        });
+      })();
+    </script>
+    <script nomodule>document.addEventListener('DOMContentLoaded', function () { document.body.innerHTML = '<p style="font-family:sans-serif;padding:24px">Este navegador es muy antiguo para la app. Actualiza tu teléfono o usa Google Chrome.</p>'; });</script>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

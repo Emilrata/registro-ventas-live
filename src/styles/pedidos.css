@@ -635,3 +635,30 @@ html {
 .entrada[readonly] {
   background: var(--fondo);
 }
+
+.cantidad__boton {
+  flex: none;
+  min-width: 40px;
+}
+
+/* Celulares muy angostos (320–359 px): la foto de la prenda arriba y los campos debajo,
+   para que los botones mantengan un tamaño cómodo para el dedo. */
+@media (max-width: 359px) {
+  .prenda__principal {
+    flex-direction: column;
+  }
+
+  .prenda__foto {
+    width: 100%;
+    height: 150px;
+  }
+
+  .fila-campos--3 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.calculando {
+  opacity: 0.45;
+  transition: opacity 0.15s;
+}

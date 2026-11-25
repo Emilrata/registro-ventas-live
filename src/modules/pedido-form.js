@@ -120,8 +120,10 @@ export async function render(contenedor, { params }) {
     };
   }
 
+  // Precio vacío = todavía no se escribió: cuenta como 0 para el total en pantalla,
+  // pero al guardar se pide escribirlo.
   function precioDe(p) {
-    return parsearMonto(p.precioTexto);
+    return (p.precioTexto ?? '').trim() === '' ? 0 : parsearMonto(p.precioTexto);
   }
 
   function calcularTotal() {
@@ -323,6 +325,8 @@ export async function render(contenedor, { params }) {
     e.preventDefault();
     error.hidden = true;
     if (prendas.some((p) => p.procesando)) return mostrarError('Espera a que terminen de cargar las fotos.');
+    const sinPrecio = prendas.findIndex((p) => (p.precioTexto ?? '').trim() === '');
+    if (sinPrecio >= 0) return mostrarError(`Escribe el precio de la prenda ${sinPrecio + 1}.`);
     const total = calcularTotal();
     if (total === null) return mostrarError('Revisa los precios: usa números como 80 o 80,50.');
     const datosPrendas = prendas.map((p) => ({

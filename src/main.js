@@ -250,6 +250,7 @@ function explicarErrorBD(err) {
 // ---------------------------------------------------------------------------
 
 async function iniciar() {
+  if (window.__navegadorAntiguo) return;
   escucharInstalacion();
   indicadorConexion();
   // Antes de abrir la base: si algo falla, la app igual puede recibir una versión corregida.
